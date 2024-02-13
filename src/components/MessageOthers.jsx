@@ -2,7 +2,7 @@ import React from "react";
 import "./myStyle.css";
 
 function MessageOthers() {
-    var prop1 = { name : "RandomUser", message: "sample Testing"}
+    var props1 = { name : "RandomUser", message: "sample Testing"}
     return (
         <div className="Other-mess-container">
             <div className="conversation-container">
@@ -14,7 +14,7 @@ function MessageOthers() {
                 </div>  
             </div>
             </div>
-    )
+    );
 }
 
 export default MessageOthers;

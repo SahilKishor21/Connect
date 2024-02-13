@@ -2,7 +2,9 @@ import React from "react";
 import "./myStyle.css";
 
 function MessageSelf() {
-    var props2 = {}
+    var props2 = {name : "test#1",
+    message : "messsage#1",
+    timestamp : "today",}
     return (
         <div className="self-mess-container">
             <div className="messageBox">

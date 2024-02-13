@@ -6,7 +6,7 @@ import React from "react";
 import MessageOthers from "./MessageOthers";
 import MessageSelf from "./MessageSelf"
 
-function ChatArea({ props }){
+function ChatArea(){
     return(
         <div className="chatArea-container">
             <div className="chatArea-header">
