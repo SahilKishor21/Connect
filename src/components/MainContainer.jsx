@@ -31,8 +31,8 @@ function MainContainer() {
     <div className="MainContainer">
        <Sidebar />
        { /*<Workarea /> */}
-      <ChatArea props ={conversations[0]}></ChatArea> 
-       {/*<Users_Groups /> */ }
+     {/* <ChatArea props ={conversations[0]}></ChatArea> */}
+       {<Users_Groups />  }
        {/* <CreateGroup /> */}
     </div>
     );
