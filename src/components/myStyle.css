@@ -1,3 +1,12 @@
+.dark{
+    background-color: #2d3941 !important;
+    color: whitesmoke !important;
+}
+
+.icon{
+    width: 1.25em !important;
+    height: 1.25em !important;
+}
 .MainContainer{
     background-color: #f4f5f8;
     height: 90vh;
@@ -52,6 +61,7 @@
     padding: 5px 10px;
     margin: 10px;
     flex : 1;
+    box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
 }
 
 .conversation-container {
@@ -62,7 +72,15 @@
     padding : 5px;
     margin: 5px;
     border-radius: 20px;
-    box-shadow: rgba(17, 12, 46, 0.15) 0px 48px 100px 0px;
+    transition-duration: 0.5s;
+}
+
+.conversation-container:hover{
+    background-color: #d9d9d9;
+}
+
+.conversation-container:active{
+    background-color: white;
 }
 
 .con-icon{
@@ -285,7 +303,7 @@
     border-radius: 20px;
     padding: 10px 5px;
     margin: 10px;
-    transition-duration: 0.5s;
+    user-select: none;
 }
 
 .list-item:hover{
@@ -295,4 +313,40 @@
 .list-item:active{
     background-color: white;
 }
+.hyper{
+    color: darkviolet;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.other-icons{
+    display: flex;
+    flex: 1;
+    justify-content: space-evenly;
+}
 
+@media only screen and(max-width:40em) {
+    .sb-search{
+        display: none;
+    }
+    .sb-chats{
+        display: none;
+    }
+    .sb-header{
+        flex-direction: column;
+        flex: 1;
+        width: min-content;
+    }
+    .other-icons{
+        flex-direction: column;
+    }
+    .chatArea-container{
+        flex: 1;
+    }
+    .sidebar-container{
+        flex: 0;
+    }
+    .MainContainer{
+        height: 100vh;
+        width: 100vw;
+    }
+}
