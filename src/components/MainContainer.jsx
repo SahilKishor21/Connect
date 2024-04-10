@@ -2,6 +2,7 @@ import React from "react";
 import "./myStyle.css";
 import Workarea from "./Workarea";
 import Sidebar from "./Sidebar";
+import Welcome from "./Welcome";
 import ChatArea from "./ChatArea";
 import CreateGroup from "./CreateGroups";
 import Users_Groups from "./Users_Groups";
@@ -16,9 +17,9 @@ function MainContainer() {
     <div className="MainContainer">
        <Sidebar />
        <Outlet />
-       { /*<Workarea /> */}
-     {/*<ChatArea props ={conversations[0]}></ChatArea>*/}
-       {<Users_Groups />}
+       {/* <Welcome /> */}
+       {/*<ChatArea /> */}
+       {/* <Users_Groups /> */}
        {/* <CreateGroup /> */}
     </div>
     );

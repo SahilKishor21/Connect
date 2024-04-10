@@ -17,16 +17,16 @@ function App() {
    <div className ={"App" + ((lightTheme) ? "" : "dark")} >
     App
       { <MainContainer /> }
-       {/* <Login />*/} 
+       {/* <Login /> */} 
       <Routes>
-        <Route path="/" elements={<Login />} />
-        <Route path='app' element={<MainContainer />}>
-          <Route path='welcome' element={<Welcome />}></Route>
-          <Route path='chat' element={<ChatArea />}></Route>
-          <Route path='users' element={< Users_Groups/>}></Route>
+        <Route path="/" element={<Login />} />
+        <Route path="app" element={<MainContainer />}>
+          <Route path="welcome" element={<Welcome />}></Route>
+          <Route path="chat" element={<ChatArea />}></Route>
+          <Route path="users" element={< Users_Groups/>}></Route>
          {/* <Route path='groups' element={<Groups />}></Route> */}
-          <Route path='create-groups' element={<CreateGroup />}></Route>
-          <Route path='conversations' element={< ConversationsItem />}></Route>
+          <Route path="create-groups" element={<CreateGroup />}></Route>
+          <Route path="conversations" element={< ConversationsItem />}></Route>
         </Route>
       </Routes>
   

@@ -2,11 +2,11 @@ import { Divider, IconButton } from "@mui/material";
 import "./myStyle.css";
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendSharpIcon from '@mui/icons-material/SendSharp';
-import React from "react";
+import React, { useState } from "react";
 import MessageOthers from "./MessageOthers";
 import MessageSelf from "./MessageSelf";
 import { useNavigate } from "react-router-dom";
-useNavigate
+
 
 function ChatArea(){
     const [conversations, setConversations]= useState([

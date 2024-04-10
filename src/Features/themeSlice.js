@@ -7,11 +7,10 @@ export const themeSlice = createSlice(
         
         name : 'themeSlice',
         initialState,
-        reducer : {
+        reducers : {
             toggleTheme : (state)=> {
-               state =!state;
+               state.theme =!state.theme; 
                 },
-                // console.log
             
         },
     }
