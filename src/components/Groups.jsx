@@ -11,7 +11,7 @@ function Groups() {
     const lightTheme = useSelector((state) => state.themekey);
     return(
         <AnimatePresence>
-            <motion.div
+         <motion.div
              initial={{opacity:0, scale:1}}
              animate={{opacity:1, scale:1}} 
              exit={{opacity:0, scale:0}}
