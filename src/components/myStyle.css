@@ -20,6 +20,7 @@
     flex: 0.3;
     display: flex;
     flex-direction: column;
+    background-color: aliceblue;
 }
 
 .chatArea-container{
@@ -266,7 +267,7 @@
 
 .list-container{
     flex: 0.7;
-    background-color: aquamarine;
+    background-color: aliceblue;
 }
 .ug-header{
     background-color: white;
@@ -303,6 +304,7 @@
     border-radius: 20px;
     padding: 10px 5px;
     margin: 10px;
+    -webkit-user-select: none;
     user-select: none;
 }
 

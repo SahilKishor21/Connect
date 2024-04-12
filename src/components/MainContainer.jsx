@@ -15,7 +15,7 @@ function MainContainer() {
 
     return (
     <div className="MainContainer">
-       <Sidebar />
+       {<Sidebar />}
        <Outlet />
        {/* <Welcome /> */}
        {/*<ChatArea /> */}
