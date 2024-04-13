@@ -3,7 +3,8 @@ import "./myStyle.css";
 import chatting from "./chatting.png";
 import { IconButton } from "@mui/material";
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
 
@@ -11,10 +12,7 @@ function Groups() {
     const lightTheme = useSelector((state) => state.themekey);
     return(
         <AnimatePresence>
-         <motion.div
-             initial={{opacity:0, scale:1}}
-             animate={{opacity:1, scale:1}} 
-             exit={{opacity:0, scale:0}}
+        <motion.div
              transition={{
                 ease:"anticipate",
                 duration: "0.3s",
@@ -39,38 +37,32 @@ function Groups() {
                 </input>
             </div>
             <div className="ug-list">
-            <motion.div
-             whileHover={{scale: 1.1}}
-             whileTap={{scale:0.98}}
+            <motion.div whileHover={{scale: 1.01}} whileTap={{scale:0.98}}
              className={"list-items" + (lightTheme ? "" : "dark")}>
                 <p className={"con-icon" + (lightTheme ? "" : "dark")}>T</p>
                 <p className={"con-title" + (lightTheme ? "" : "dark")}>Test group</p>
-                </motion.div>
+            </motion.div>
                 <motion.div
-                 whileHover={{scale: 1.1}}
+                 whileHover={{scale: 1.01}}
                  whileTap={{scale:0.98}}
                  className={"list-items" + (lightTheme ? "" : "dark")}>
                     <p className={"con-icon" + (lightTheme ? "" : "dark")}>T</p>
                     <p className={"con-title" + (lightTheme ? "" : "dark")}>Test group</p>
                 </motion.div>
-                <motion.div 
-                whileHover={{scale: 1.1}}
-                whileTap={{scale:0.98}}
+                <motion.div whileHover={{scale: 1.01}} whileTap={{scale:0.98}}
                  className={"list-items" + (lightTheme ? "" : "dark")}>
                     <p className={"con-icon" + (lightTheme ? "" : "dark")}>T</p>
                     <p className={"con-title" + (lightTheme ? "" : "dark")}>Test group</p>
                 </motion.div>
-                <motion.div 
-                whileHover={{scale: 1.1}}
-                whileTap={{scale:0.98}}
+                <motion.div  whileHover={{scale: 1.01}}  whileTap={{scale:0.98}}
                  className={"list-items" + (lightTheme ? "" : "dark")}>
                     <p className={"con-icon" + (lightTheme ? "" : "dark")}>T</p>
                     <p className={"con-title" + (lightTheme ? "" : "dark")}>Test group</p>
                 </motion.div>
             </div>
         </motion.div>
-     </AnimatePresence> 
-    );
+      </AnimatePresence> 
+ );
 }
 
 export default Groups;

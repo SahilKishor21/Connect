@@ -11,7 +11,7 @@ function Login (){
                 <img src={chatting}  className="welcome-logo" />
             </div>
             <div className="login-box">
-                <p>Login to your Account </p>
+                <h3>Login to your Account </h3>
                 <TextField id="standard-basic" label= "Enter user name" color="secondary" variant="outlined" />
                 <TextField id="standard-basic" label= "password" type="password" color="secondary" autoComplete="current-password" />
                 <Button variant="contained" color="secondary">Login</Button>

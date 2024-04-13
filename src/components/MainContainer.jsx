@@ -17,7 +17,7 @@ function MainContainer() {
     <div className="MainContainer">
        {<Sidebar />}
        <Outlet />
-       {/* <Welcome /> */}
+        {/* <Welcome /> */}
        {/*<ChatArea /> */}
        {/* <Users_Groups /> */}
        {/* <CreateGroup /> */}
