@@ -9,6 +9,7 @@ import ChatArea from './components/ChatArea';
 import ConversationsItem from './components/conversationsItem';
 import { Route, Routes } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import Signin from './components/Signin';
 
 function App() {
   const dispatch = useDispatch();
@@ -19,6 +20,7 @@ function App() {
        {/* <Login /> */} 
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="Signin" element={<Signin/>} />
         <Route path="app" element={<MainContainer />}>
           <Route path="welcome" element={<Welcome />}></Route>
           <Route path="chat" element={<ChatArea />}></Route>

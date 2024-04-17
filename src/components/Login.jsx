@@ -1,6 +1,7 @@
 import { Button, TextField } from "@mui/material";
 import React from "react";
 import chatting from "./chatting.png"
+import { Link } from "react-router-dom";
 
 
 
@@ -15,6 +16,7 @@ function Login (){
                 <TextField id="standard-basic" label= "Enter user name" color="secondary" variant="outlined" />
                 <TextField id="standard-basic" label= "password" type="password" color="secondary" autoComplete="current-password" />
                 <Button variant="contained" color="secondary">Login</Button>
+                <p>New User?  <Link to="/Signin">Signin</Link> </p>
             </div>
             
         </div>

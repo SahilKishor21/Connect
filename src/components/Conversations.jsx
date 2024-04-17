@@ -26,7 +26,7 @@ function Conversations() {
         <div className={"sb-conversations" + (lightTheme ? "" : "dark")}>
              {conversations.map((conversation) => {
             return (
-                <ConversationsItem props={conversation} key={conversation} />
+                <ConversationsItem props={conversations} key={conversations.name} />
             );
         }
         )}

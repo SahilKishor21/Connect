@@ -1,22 +1,26 @@
 import React from "react";
-import chatting from "./chatting.png"
+import { TextField, Button } from "@mui/material";
+import chatting from "./chatting.png";
 import "./myStyle.css"
+import { Link } from "react-router-dom";
 
 function Signin () {
     return (
-        <div className="Signin-container">
+        <div className="login-container">
             <div className="image-container">
                 <img src={chatting}  className="welcome-logo" />
-            </div>
+            </div> 
             <div className="login-box">
-                <h3>Signin to your Account </h3>
+                <h3>Login to your Account </h3>
                 <TextField id="standard-basic" label= "Enter user name" color="secondary" variant="outlined" />
-                <TextField id="standard-basic" label= "Enter user email" type= "email" color="secondary" variant="outlined" />
+                <TextField id="standard-basic" label= "Enter user email" color="secondary" variant="outlined" />
                 <TextField id="standard-basic" label= "password" type="password" color="secondary" autoComplete="current-password" />
                 <Button variant="contained" color="secondary">Signin</Button>
+                <p>Already have an account?    <Link to="/">Login</Link> </p>
+              
             </div>
-            
         </div>
+        
     );
 }
 
