@@ -11,7 +11,7 @@ function Signin () {
                 <img src={chatting}  className="welcome-logo" />
             </div> 
             <div className="login-box">
-                <h3>Login to your Account </h3>
+                <h3>Create your Account </h3>
                 <TextField id="standard-basic" label= "Enter user name" color="secondary" variant="outlined" />
                 <TextField id="standard-basic" label= "Enter user email" color="secondary" variant="outlined" />
                 <TextField id="standard-basic" label= "password" type="password" color="secondary" autoComplete="current-password" />
