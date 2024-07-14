@@ -31,7 +31,7 @@ function Login (){
             };
 
             const response = await axios.post(
-                "htttp://localhost:5000/user/login/", 
+                "http://localhost:5000/user/login/", 
                 data,
                 config, 
 
@@ -61,7 +61,7 @@ function Login (){
             };
 
             const response = await axios.post(
-                "htttp://localhost:5000/user/register/", 
+                "http://localhost:5000/user/register/", 
                 data,
                 config
             );
