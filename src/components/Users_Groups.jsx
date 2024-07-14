@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useState } from "react";
 import "./myStyle.css";
 import chatting from "./chatting.png"
 import { IconButton } from "@mui/material";
@@ -7,6 +7,9 @@ import { AnimatePresence, motion } from "framer-motion"
 import SearchOutlined from "@mui/icons-material/SearchOutlined";
 
 function Users_Groups() {
+
+    const {refresh, setRefresh} = useContext(myContext);
+    const [users, setUsers] = useState([]);
     const lightTheme = useSelector((state)=> state.themekey);
     return (
         <AnimatePresence>
