@@ -11,7 +11,7 @@ export default function ConversationsItem({ props }) {
             <p className="con-lastMessage">{props.lastMessage}</p>
             <p className="con-timestamp">{props.timestamp}</p>
             <p className="con-timestamp">{props.timestamp}</p>
-            
+            <p className="con-timestamp">{props.lastMessage}</p>
         </div>
     );
 }
