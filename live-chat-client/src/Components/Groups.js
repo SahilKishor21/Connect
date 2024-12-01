@@ -36,7 +36,7 @@ function Groups() {
     };
 
     axios
-      .get("http://localhost:8080/chat/fetchGroups", config)
+      .get("http://localhost:5000/chat/fetchGroups", config)
       .then((response) => {
         console.log("Group Data from API ", response.data);
         SetGroups(response.data);
@@ -97,7 +97,7 @@ function Groups() {
                   //   },
                   // };
                   // axios.post(
-                  //   "http://localhost:8080/chat/",
+                  //   "http://localhost:5000/chat/",
                   //   {
                   //     userId: user._id,
                   //   },
