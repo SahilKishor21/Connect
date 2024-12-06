@@ -1,70 +1,182 @@
-# Getting Started with Create React App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Live Chat Application
 
-## Available Scripts
+This is a real-time chat application that supports text and file messaging, allowing users to interact through private and group chats. The application allows users to send text messages, upload files (images, documents, etc.), and manage chat conversations. It utilizes **Node.js**, **Express**, **MongoDB**, **Mongoose**, and **Socket.io** for real-time communication and message storage.
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- User authentication and authorization
+- Real-time chat functionality (text and file messages)
+- File upload (support for images, documents, etc.)
+- Chat history with message population (sender, receiver, chat details)
+- Latest message tracking in chat rooms
+- Error handling for all operations
+- Secure file upload and storage
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Tech Stack
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Frontend**: React (with Tailwind CSS or other styling libraries)
+- **Backend**: Node.js with Express
+- **Database**: MongoDB (using Mongoose for schema modeling)
+- **Real-time Communication**: Socket.io (for real-time messaging)
+- **File Storage**: Multer (for handling file uploads)
+- **Authentication**: JWT (JSON Web Tokens) for secure login
 
-### `npm test`
+## Setup Instructions
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `npm run build`
+Before setting up the project, ensure you have the following installed:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- **Node.js** (v14 or higher)
+- **MongoDB** (locally or through MongoDB Atlas)
+- **npm** or **yarn**
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Clone the Repository
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+git clone https://github.com/yourusername/live-chat-app.git
+cd live-chat-app
+```
 
-### `npm run eject`
+### Install Dependencies
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Run the following command to install the necessary packages:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm install
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+or if you prefer `yarn`:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+yarn install
+```
 
-## Learn More
+### Environment Variables
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Create a `.env` file in the root of the project and add the following variables:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```bash
+MONGO_URI=mongodb://localhost:27017/liveChatDB  # MongoDB connection URI
+JWT_SECRET=your_jwt_secret_key
+PORT=5000  # Backend server port
+```
 
-### Code Splitting
+If using MongoDB Atlas for the database, replace `localhost:27017` with your MongoDB Atlas URI.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### File Upload Directory
 
-### Analyzing the Bundle Size
+Ensure you have a directory for storing file uploads (you can change the upload location in your multer configuration):
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+mkdir uploads
+```
 
-### Making a Progressive Web App
+### Run the Application
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+To start the backend server, run:
 
-### Advanced Configuration
+```bash
+npm run dev
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+This will start the backend server on `http://localhost:5000`. The frontend (if separately set up) should be able to communicate with it for handling chat functionality.
 
-### Deployment
+## API Endpoints
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+### 1. Get All Messages for a Chat
 
-### `npm run build` fails to minify
+**GET** `/messages/:chatId`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Fetches all messages for a specific chat.
+
+#### Example Request:
+
+```bash
+GET http://localhost:5000/messages/605c72ef1532072b1f1c1e9d
+```
+
+### 2. Send Text Message
+
+**POST** `/messages`
+
+Sends a new text message in a chat.
+
+#### Example Request Body:
+
+```json
+{
+  "content": "Hello, how are you?",
+  "chatId": "605c72ef1532072b1f1c1e9d"
+}
+```
+
+### 3. Upload File in Chat
+
+**POST** `/messages/upload`
+
+Handles file uploads (images, documents) and sends them as a message.
+
+#### Example Form-Data Request:
+
+```bash
+POST http://localhost:5000/messages/upload
+Content-Type: multipart/form-data
+Authorization: Bearer <JWT Token>
+```
+
+Body:
+
+- `file` (file input)
+- `chatId`: ID of the chat to which the file belongs
+
+### 4. User Authentication
+
+- **POST** `/api/users/login` for logging in and receiving a JWT token
+- **POST** `/api/users/register` for registering a new user
+
+## Project Structure
+
+```bash
+├── backend/
+│   ├── controllers/        # Message and user controllers
+│   ├── middleware/         # Authentication, file upload middlewares
+│   ├── models/             # Mongoose models (User, Chat, Message)
+│   ├── routes/             # Express routes for user and message operations
+│   ├── .env                # Environment variables
+│   ├── server.js           # Main server file
+├── uploads/                # Directory for storing uploaded files
+├── README.md               # Project documentation
+└── package.json            # Project dependencies and scripts
+```
+
+## File Uploads
+
+File uploads are handled using `multer` middleware, and files are stored in memory as `Buffer`. The content is saved as part of the message model in MongoDB.
+
+## Testing and Debugging
+
+1. Make sure MongoDB is running.
+2. Test each API endpoint using tools like **Postman** or **Insomnia**.
+3. Ensure JWT tokens are correctly sent in the Authorization header for protected routes.
+
+## Troubleshooting
+
+If you encounter any errors, here are some common steps to troubleshoot:
+
+1. **MongoDB Connection Issues**: Ensure MongoDB is running and the correct URI is used in the `.env` file.
+2. **File Upload Problems**: Check if the `uploads/` directory exists and has proper permissions.
+3. **JWT Errors**: Ensure the JWT token is correctly included in the `Authorization` header when calling protected routes.
+
+## Contributing
+
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Commit your changes (`git commit -am 'Add feature'`).
+4. Push to the branch (`git push origin feature-branch`).
+5. Create a new Pull Request.
+
+## License
+
+This project is licensed under the MIT License.
