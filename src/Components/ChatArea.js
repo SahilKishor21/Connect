@@ -1,189 +1,301 @@
-// Import required modules
 import React, { useContext, useEffect, useRef, useState } from "react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import MessageSelf from "./MessageSelf";
-import MessageOthers from "./MessageOthers";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import MicIcon from "@mui/icons-material/Mic";
+import StopIcon from "@mui/icons-material/Stop";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import Skeleton from "@mui/material/Skeleton";
 import axios from "axios";
 import { myContext } from "./MainContainer";
+import MessageSelf from "./MessageSelf";
+import MessageOthers from "./MessageOthers";
 
 function ChatArea() {
-  const lightTheme = useSelector((state) => state.themeKey);
+  // Existing states
   const [messageContent, setMessageContent] = useState("");
-  const [file, setFile] = useState(null); // State for file upload
+  const [file, setFile] = useState(null);
+  const [filePreview, setFilePreview] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const lightTheme = useSelector((state) => state.themeKey);
+  
+  // Voice recording states
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioURL, setAudioURL] = useState("");
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // Existing refs and params
   const messagesEndRef = useRef(null);
   const dyParams = useParams();
-  const [chat_id, chat_user] = dyParams._id.split("&");
+  const [chat_id, chat_user_raw] = dyParams._id.split("&");
   const userData = JSON.parse(localStorage.getItem("userData"));
   const [allMessages, setAllMessages] = useState([]);
   const { refresh, setRefresh } = useContext(myContext);
   const [loaded, setLoaded] = useState(false);
+  const [recipientName, setRecipientName] = useState("");
 
-  const sendMessage = () => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${userData.data.token}`,
-      "Content-Type": file ? "multipart/form-data" : "application/json",
-      },
-    };
+  // Voice recording functions
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      audioChunksRef.current = [];
 
-    // If there is a file, send it using FormData
-    if (file) {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("chatId", chat_id);
-      
-      axios.post("http://localhost:5000/message/upload", formData, config)
-        .then(({ data }) => {
-          console.log("File sent successfully");
-          setFile(null); // Reset file state
-          setRefresh(!refresh);
-        })
-        .catch((err) => console.error("File upload failed", err));
-    } else {
-      // Send a normal text message
-      axios.post(
-        "http://localhost:5000/message/",
-        {
-          content: messageContent,
-          chatId: chat_id,
-        },
-        config
-      ).then(({ data }) => {
-        console.log("Message sent");
-        setMessageContent("");
-        setRefresh(!refresh);
-      });
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setAudioURL(audioUrl);
+        setFile(new File([audioBlob], 'voice-message.webm', { type: 'audio/webm' }));
+      };
+
+      mediaRecorderRef.current.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      alert('Error accessing microphone. Please ensure microphone permissions are granted.');
     }
   };
 
-  useEffect(() => {
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+    }
+  };
+
+  // Modified uploadToCloudinary to handle voice messages
+  const uploadToCloudinary = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET);
+    formData.append("cloud_name", process.env.REACT_APP_CLOUDINARY_CLOUD_NAME);
+    formData.append("resource_type", file.type.startsWith('audio') ? 'video' : 'auto');
+
+    try {
+      setUploading(true);
+      const response = await axios.post(
+        `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/auto/upload`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+        }
+      );
+
+      setUploading(false);
+      return response.data.secure_url;
+    } catch (error) {
+      console.error("Cloudinary upload error:", error);
+      setUploading(false);
+      return null;
+    }
+  };
+
+  // Modified sendMessage to handle voice messages
+  const sendMessage = async () => {
     const config = {
       headers: {
         Authorization: `Bearer ${userData.data.token}`,
+        "Content-Type": "application/json",
       },
     };
 
-    axios.get("http://localhost:5000/message/" + chat_id, config)
+    try {
+      const receiverId = recipientName === userData.data.name ? chat_user_raw : userData.data._id;
+      let messageData = { content: messageContent, chatId: chat_id, receiverId };
+
+      if (file) {
+        const cloudinaryUrl = await uploadToCloudinary(file);
+        if (cloudinaryUrl) {
+          messageData = {
+            ...messageData,
+            content: cloudinaryUrl,
+            isFile: true,
+            fileType: file.type,
+            fileName: file.name,
+            isVoiceMessage: file.type.startsWith('audio')
+          };
+        }
+      }
+
+      await axios.post("http://localhost:5000/message/", messageData, config);
+
+      setFile(null);
+      setFilePreview(null);
+      setMessageContent("");
+      setAudioURL("");
+      setRefresh(!refresh);
+    } catch (error) {
+      console.error("Message send error:", error);
+    }
+  };
+
+  // Existing useEffects and handlers remain the same
+  useEffect(() => {
+    const fetchRecipientName = async () => {
+      const config = {
+        headers: { Authorization: `Bearer ${userData.data.token}` },
+      };
+      try {
+        const { data } = await axios.get(
+          `http://localhost:5000/message/recipient/${chat_id}`,
+          config
+        );
+        setRecipientName(data.recipientName);
+      } catch (error) {
+        console.error("Failed to fetch recipient name:", error);
+        setRecipientName(chat_user_raw);
+      }
+    };
+
+    if (chat_user_raw === userData.data.name) {
+      fetchRecipientName();
+    } else {
+      setRecipientName(chat_user_raw);
+    }
+  }, [chat_id, chat_user_raw, userData.data.token]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [allMessages]);
+
+  useEffect(() => {
+    const config = {
+      headers: { Authorization: `Bearer ${userData.data.token}` },
+    };
+
+    axios
+      .get(`http://localhost:5000/message/${chat_id}`, config)
       .then(({ data }) => {
         setAllMessages(data);
         setLoaded(true);
-      });
+      })
+      .catch((error) => console.error("Error fetching messages:", error));
   }, [refresh, chat_id, userData.data.token]);
 
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreview(reader.result);
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
+
+  // Skeleton loader
   if (!loaded) {
     return (
-      <div
-        style={{
-          border: "20px",
-          padding: "10px",
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-        }}
-      >
-        <Skeleton
-          variant="rectangular"
-          sx={{ width: "100%", borderRadius: "10px" }}
-          height={60}
-        />
-        <Skeleton
-          variant="rectangular"
-          sx={{
-            width: "100%",
-            borderRadius: "10px",
-            flexGrow: "1",
-          }}
-        />
-        <Skeleton
-          variant="rectangular"
-          sx={{ width: "100%", borderRadius: "10px" }}
-          height={60}
-        />
-      </div>
-    );
-  } else {
-    return (
-      <div className={"chatArea-container" + (lightTheme ? "" : " dark")}>
-        <div className={"chatArea-header" + (lightTheme ? "" : " dark")}>
-          <p className={"con-icon" + (lightTheme ? "" : " dark")}>
-            {chat_user[0]}
-          </p>
-          <div className={"header-text" + (lightTheme ? "" : " dark")}>
-            <p className={"con-title" + (lightTheme ? "" : " dark")}>
-              {chat_user}
-            </p>
-          </div>
-          <IconButton className={"icon" + (lightTheme ? "" : " dark")}>
-            <DeleteIcon />
-          </IconButton>
-        </div>
-
-        <div className={"messages-container" + (lightTheme ? "" : " dark")}>
-          {allMessages
-            .slice(0)
-            .reverse()
-            .map((message, index) => {
-              const sender = message.sender;
-              const self_id = userData.data._id;
-              if (sender._id === self_id) {
-                return <MessageSelf props={message} key={index} />;
-              } else {
-                return <MessageOthers props={message} key={index} />;
-              }
-            })}
-        </div>
-
-        <div ref={messagesEndRef} className="BOTTOM" />
-
-        <div className={"text-input-area" + (lightTheme ? "" : " dark")}>
-          <input
-            placeholder="Type a Message"
-            className={"search-box" + (lightTheme ? "" : " dark")}
-            value={messageContent}
-            onChange={(e) => {
-              setMessageContent(e.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.code === "Enter") {
-                sendMessage();
-              }
-            }}
-          />
-
-          <IconButton
-            className={"icon" + (lightTheme ? "" : " dark")}
-            onClick={() => {
-              sendMessage();
-            }}
-          >
-            <SendIcon />
-          </IconButton>
-
-          {/* File Upload Button */}
-          <IconButton
-            component="label"
-            className={"icon" + (lightTheme ? "" : " dark")}
-          >
-            <AttachFileIcon />
-            <input
-              type="file"
-              hidden
-              onChange={(e) => {
-                setFile(e.target.files[0]);
-              }}
-            />
-          </IconButton>
-        </div>
+      <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <Skeleton variant="rectangular" sx={{ width: "100%", borderRadius: "10px" }} height={60} />
+        <Skeleton variant="rectangular" sx={{ width: "100%", borderRadius: "10px", flexGrow: "1" }} />
+        <Skeleton variant="rectangular" sx={{ width: "100%", borderRadius: "10px" }} height={60} />
       </div>
     );
   }
+
+  return (
+    <div className={"chatArea-container" + (lightTheme ? "" : " dark")}>
+      {/* Chat Header */}
+      <div className={"chatArea-header" + (lightTheme ? "" : " dark")}>
+        <p className={"con-icon" + (lightTheme ? "" : " dark")}>{recipientName[0]}</p>
+        <div className={"header-text" + (lightTheme ? "" : " dark")}>
+          <p className={"con-title" + (lightTheme ? "" : " dark")}>{recipientName}</p>
+        </div>
+        <IconButton>
+          <DeleteIcon />
+        </IconButton>
+      </div>
+
+      {/* Messages */}
+      <div
+        className={"messages-container" + (lightTheme ? "" : " dark")}
+        style={{ flexGrow: 1, overflowY: "auto", padding: "10px" }}
+      >
+        {allMessages.slice(0).reverse().map((message, index) => {
+          const sender = message.sender;
+          const self_id = userData.data._id;
+
+          if (message.isFile) {
+            if (message.isVoiceMessage) {
+              return (
+                <div key={index} style={{ alignSelf: sender._id === self_id ? "flex-end" : "flex-start", margin: "10px" }}>
+                  <audio controls src={message.content} style={{ maxWidth: "250px" }} />
+                </div>
+              );
+            }
+            return (
+              <div key={index} style={{ alignSelf: sender._id === self_id ? "flex-end" : "flex-start" }}>
+                {message.fileType.startsWith("image") ? (
+                  <img src={message.content} alt={message.fileName} style={{ maxWidth: "250px" }} />
+                ) : (
+                  <a href={message.content} target="_blank" rel="noopener noreferrer">
+                    {message.fileName}
+                  </a>
+                )}
+              </div>
+            );
+          }
+
+          return sender._id === self_id ? (
+            <MessageSelf props={message} key={index} />
+          ) : (
+            <MessageOthers props={message} key={index} />
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* File/Audio Preview */}
+      {(filePreview || audioURL) && (
+        <div style={{ display: "flex", alignItems: "center", padding: "10px" }}>
+          {file?.type.startsWith("image/") ? (
+            <img src={filePreview} alt="Preview" style={{ maxWidth: "100px" }} />
+          ) : audioURL ? (
+            <audio controls src={audioURL} style={{ maxWidth: "200px" }} />
+          ) : (
+            <span>{file?.name}</span>
+          )}
+          <IconButton onClick={() => {
+            setFile(null);
+            setFilePreview(null);
+            setAudioURL("");
+          }}>❌</IconButton>
+        </div>
+      )}
+
+      {/* Input Area */}
+      <div style={{ display: "flex", alignItems: "center", padding: "10px" }}>
+        <input
+          placeholder="Type a Message"
+          style={{ flexGrow: 1, padding: "10px", borderRadius: "20px" }}
+          value={messageContent}
+          onChange={(e) => setMessageContent(e.target.value)}
+          onKeyDown={(event) => event.code === "Enter" && sendMessage()}
+        />
+        <IconButton onClick={sendMessage}>{uploading ? <CloudUploadIcon /> : <SendIcon />}</IconButton>
+        <IconButton onClick={isRecording ? stopRecording : startRecording}>
+          {isRecording ? <StopIcon style={{ color: "red" }} /> : <MicIcon />}
+        </IconButton>
+        <IconButton component="label">
+          <AttachFileIcon />
+          <input type="file" hidden onChange={handleFileChange} />
+        </IconButton>
+      </div>
+    </div>
+  );
 }
 
-export default ChatArea;
+export default ChatArea; 

@@ -12,29 +12,24 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../Features/themeSlice";
 import axios from "axios";
-import { refreshSidebarFun } from "../Features/refreshSidebar";
 import { myContext } from "./MainContainer";
 
 function Sidebar() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const lightTheme = useSelector((state) => state.themeKey);
-  // const refresh = useSelector((state) => state.refreshKey);
   const { refresh, setRefresh } = useContext(myContext);
-  console.log("Context API : refresh : ", refresh);
+
   const [conversations, setConversations] = useState([]);
-  // console.log("Conversations of Sidebar : ", conversations);
   const userData = JSON.parse(localStorage.getItem("userData"));
-  // console.log("Data from LocalStorage : ", userData);
-  const nav = useNavigate();
+  const user = userData?.data;
+
+  // Redirect if not authenticated
   if (!userData) {
-    console.log("User not Authenticated");
-    nav("/");
+    navigate("/");
   }
 
-  const user = userData.data;
   useEffect(() => {
-    // console.log("Sidebar : ", user.token);
     const config = {
       headers: {
         Authorization: `Bearer ${user.token}`,
@@ -42,22 +37,31 @@ function Sidebar() {
     };
 
     axios.get("http://localhost:5000/chat/", config).then((response) => {
-      console.log("Data refresh in sidebar ", response.data);
       setConversations(response.data);
-      // setRefresh(!refresh);
+      //setRefresh(!refresh);
     });
-  }, [refresh]);
+  }, [refresh, user.token, setRefresh]);
+
+  const getReceiverName = (conversation) => {
+    // Filter the user to identify the receiver
+    const receiver = conversation.users.find(
+      (participant) => participant._id !== user._id
+    );
+    return receiver?.name || "Unknown User"; // Fallback to "Unknown User" if no match
+  };
 
   return (
     <div className="sidebar-container">
+      {/* Sidebar Header */}
       <div className={"sb-header" + (lightTheme ? "" : " dark")}>
         <div className="other-icons">
           <IconButton
             onClick={() => {
-              nav("/app/welcome");
+              navigate("/app/welcome");
             }}
           >
             <AccountCircleIcon
+              sx={{ color: "darkorchid" }}
               className={"icon" + (lightTheme ? "" : " dark")}
             />
           </IconButton>
@@ -67,21 +71,30 @@ function Sidebar() {
               navigate("users");
             }}
           >
-            <PersonAddIcon className={"icon" + (lightTheme ? "" : " dark")} />
+            <PersonAddIcon
+              sx={{ color: "darkorchid" }}
+              className={"icon" + (lightTheme ? "" : " dark")}
+            />
           </IconButton>
           <IconButton
             onClick={() => {
               navigate("groups");
             }}
           >
-            <GroupAddIcon className={"icon" + (lightTheme ? "" : " dark")} />
+            <GroupAddIcon
+              sx={{ color: "darkorchid" }}
+              className={"icon" + (lightTheme ? "" : " dark")}
+            />
           </IconButton>
           <IconButton
             onClick={() => {
               navigate("create-groups");
             }}
           >
-            <AddCircleIcon className={"icon" + (lightTheme ? "" : " dark")} />
+            <AddCircleIcon
+              sx={{ color: "darkorchid" }}
+              className={"icon" + (lightTheme ? "" : " dark")}
+            />
           </IconButton>
 
           <IconButton
@@ -91,11 +104,15 @@ function Sidebar() {
           >
             {lightTheme && (
               <NightlightIcon
+                sx={{ color: "darkorchid" }}
                 className={"icon" + (lightTheme ? "" : " dark")}
               />
             )}
             {!lightTheme && (
-              <LightModeIcon className={"icon" + (lightTheme ? "" : " dark")} />
+              <LightModeIcon
+                sx={{ color: "darkorchid" }}
+                className={"icon" + (lightTheme ? "" : " dark")}
+              />
             )}
           </IconButton>
           <IconButton
@@ -104,10 +121,15 @@ function Sidebar() {
               navigate("/");
             }}
           >
-            <ExitToAppIcon className={"icon" + (lightTheme ? "" : " dark")} />
+            <ExitToAppIcon
+              sx={{ color: "darkorchid" }}
+              className={"icon" + (lightTheme ? "" : " dark")}
+            />
           </IconButton>
         </div>
       </div>
+
+      {/* Search Bar */}
       <div className={"sb-search" + (lightTheme ? "" : " dark")}>
         <IconButton className={"icon" + (lightTheme ? "" : " dark")}>
           <SearchIcon />
@@ -117,50 +139,34 @@ function Sidebar() {
           className={"search-box" + (lightTheme ? "" : " dark")}
         />
       </div>
+
+      {/* Conversations */}
       <div className={"sb-conversations" + (lightTheme ? "" : " dark")}>
         {conversations.map((conversation, index) => {
-          // console.log("current convo : ", conversation);
           if (conversation.users.length === 1) {
             return <div key={index}></div>;
           }
-          if (conversation.latestMessage === undefined) {
-            // console.log("No Latest Message with ", conversation.users[1]);
+
+          const receiverName = getReceiverName(conversation);
+
+          if (!conversation.latestMessage) {
             return (
               <div
                 key={index}
+                className="conversation-container"
                 onClick={() => {
-                  console.log("Refresh fired from sidebar");
-                  // dispatch(refreshSidebarFun());
-                  setRefresh(!refresh);
+                  navigate("chat/" + conversation._id + "&" + receiverName);
                 }}
               >
-                <div
-                  key={index}
-                  className="conversation-container"
-                  onClick={() => {
-                    navigate(
-                      "chat/" +
-                        conversation._id +
-                        "&" +
-                        conversation.users[1].name
-                    );
-                  }}
-                  // dispatch change to refresh so as to update chatArea
-                >
-                  <p className={"con-icon" + (lightTheme ? "" : " dark")}>
-                    {conversation.users[1].name[0]}
-                  </p>
-                  <p className={"con-title" + (lightTheme ? "" : " dark")}>
-                    {conversation.users[1].name}
-                  </p>
-
-                  <p className="con-lastMessage">
-                    No previous Messages, click here to start a new chat
-                  </p>
-                  {/* <p className={"con-timeStamp" + (lightTheme ? "" : " dark")}>
-                {conversation.timeStamp}
-              </p> */}
-                </div>
+                <p className={"con-icon" + (lightTheme ? "" : " dark")}>
+                  {receiverName[0]}
+                </p>
+                <p className={"con-title" + (lightTheme ? "" : " dark")}>
+                  {receiverName}
+                </p>
+                <p className="con-lastMessage">
+                  No previous messages, click here to start a new chat.
+                </p>
               </div>
             );
           } else {
@@ -169,27 +175,18 @@ function Sidebar() {
                 key={index}
                 className="conversation-container"
                 onClick={() => {
-                  navigate(
-                    "chat/" +
-                      conversation._id +
-                      "&" +
-                      conversation.users[1].name
-                  );
+                  navigate("chat/" + conversation._id + "&" + receiverName);
                 }}
               >
                 <p className={"con-icon" + (lightTheme ? "" : " dark")}>
-                  {conversation.users[1].name[0]}
+                  {receiverName[0]}
                 </p>
                 <p className={"con-title" + (lightTheme ? "" : " dark")}>
-                  {conversation.users[1].name}
+                  {receiverName}
                 </p>
-
                 <p className="con-lastMessage">
                   {conversation.latestMessage.content}
                 </p>
-                {/* <p className={"con-timeStamp" + (lightTheme ? "" : " dark")}>
-                {conversation.timeStamp}
-              </p> */}
               </div>
             );
           }

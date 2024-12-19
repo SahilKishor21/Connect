@@ -145,7 +145,7 @@ input:focus {
   font-size: 0.75rem;
   font-weight: lighter;
   font-style: italic;
-  color: white
+  color: grey
 }
 
 .chatArea-container {
@@ -225,7 +225,7 @@ input:focus {
 .messageBox {
   display: flex;
   flex-direction: column;
-  background-color: #74b7e4;
+  background-color: darkorchid;
   width: max-content;
   padding: 10px 10px;
   margin: 5px;
