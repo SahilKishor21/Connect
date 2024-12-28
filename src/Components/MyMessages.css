@@ -1,0 +1,54 @@
+.self-message-container {
+    display: flex;
+    justify-content: flex-end;
+    margin: 10px;
+    
+}
+
+.messageBox {
+    padding: 10px;
+    max-width: 70%;
+    width: fit-content;
+    background-color: #dcf8c6;  /* Light green background for self messages */
+    border-radius: 10px;
+    margin: 5px;
+    word-wrap: break-word;
+    position: relative;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    
+}
+
+.self-timeStamp {
+    font-size: 0.75rem;
+    color: #667781;
+    text-align: right;
+    margin-top: 5px;
+}
+
+/* Media styles */
+.messageBox img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 5px 0;
+}
+
+.messageBox audio {
+    max-width: 100%;
+    margin: 5px 0;
+}
+
+.messageBox video {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 5px 0;
+}
+
+/* Dark theme */
+.dark .messageBox {
+    background-color: #005c4b;  /* Darker green for dark theme */
+    color: #fff;
+}
+
+.dark .self-timeStamp {
+    color: #8696a0;
+}

@@ -15,20 +15,15 @@ import MessageSelf from "./MessageSelf";
 import MessageOthers from "./MessageOthers";
 
 function ChatArea() {
-  // Existing states
   const [messageContent, setMessageContent] = useState("");
   const [file, setFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [uploading, setUploading] = useState(false);
   const lightTheme = useSelector((state) => state.themeKey);
-  
-  // Voice recording states
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState("");
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
-
-  // Existing refs and params
   const messagesEndRef = useRef(null);
   const dyParams = useParams();
   const [chat_id, chat_user_raw] = dyParams._id.split("&");
@@ -38,7 +33,106 @@ function ChatArea() {
   const [loaded, setLoaded] = useState(false);
   const [recipientName, setRecipientName] = useState("");
 
-  // Voice recording functions
+  // Function to render media content based on file type
+  const renderMediaContent = (message) => {
+    const { content, fileType } = message;
+    const messageStyle = {
+      maxWidth: "350px",
+      padding: "10px",
+      margin: "5px",
+      borderRadius: "10px",
+      backgroundColor: message.sender._id === userData.data._id ? "#dcf8c6" : "#fff",
+      boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+    };
+
+    const contentStyle = {
+      maxWidth: "100%",
+      borderRadius: "8px",
+      marginBottom: "5px",
+    };
+
+    // Helper function to detect file type from URL
+    const getFileTypeFromUrl = (url) => {
+      const extension = url.split('.').pop().toLowerCase();
+      if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) return 'image';
+      if (['mp3', 'wav', 'webm'].includes(extension)) return 'audio';
+      if (['mp4', 'webm', 'ogg'].includes(extension)) return 'video';
+      return 'other';
+    };
+
+    if (message.isFile) {
+      const mediaType = fileType ? fileType.split('/')[0] : getFileTypeFromUrl(content);
+
+      switch (mediaType) {
+        case 'image':
+          return (
+            <div style={messageStyle}>
+              <img
+                src={content}
+                alt="Shared media"
+                style={contentStyle}
+              />
+              {message.fileName && (
+                <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
+              )}
+            </div>
+          );
+
+        case 'audio':
+          return (
+            <div style={messageStyle}>
+              <audio controls style={contentStyle}>
+                <source src={content} type={fileType || 'audio/webm'} />
+                Your browser does not support the audio element.
+              </audio>
+              {message.fileName && (
+                <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
+              )}
+            </div>
+          );
+
+        case 'video':
+          return (
+            <div style={messageStyle}>
+              <video controls style={contentStyle}>
+                <source src={content} type={fileType || 'video/mp4'} />
+                Your browser does not support the video element.
+              </video>
+              {message.fileName && (
+                <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
+              )}
+            </div>
+          );
+
+        default:
+          return (
+            <div style={messageStyle}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <AttachFileIcon />
+                <div>
+                  <div style={{ wordBreak: "break-word" }}>{message.fileName || 'Download file'}</div>
+                  <a
+                    href={content}
+                    download
+                    style={{ color: "#007bff", textDecoration: "none" }}
+                  >
+                    Download
+                  </a>
+                </div>
+              </div>
+            </div>
+          );
+      }
+    }
+
+    // Return text message if not a file
+    return message.sender._id === userData.data._id ? (
+      <MessageSelf props={message} />
+    ) : (
+      <MessageOthers props={message} />
+    );
+  };
+
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -52,17 +146,17 @@ function ChatArea() {
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
         const audioUrl = URL.createObjectURL(audioBlob);
         setAudioURL(audioUrl);
-        setFile(new File([audioBlob], 'voice-message.webm', { type: 'audio/webm' }));
+        setFile(new File([audioBlob], "voice-message.webm", { type: "audio/webm" }));
       };
 
       mediaRecorderRef.current.start();
       setIsRecording(true);
     } catch (error) {
-      console.error('Error accessing microphone:', error);
-      alert('Error accessing microphone. Please ensure microphone permissions are granted.');
+      console.error("Error accessing microphone:", error);
+      alert("Error accessing microphone. Please ensure microphone permissions are granted.");
     }
   };
 
@@ -70,26 +164,23 @@ function ChatArea() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
     }
   };
 
-  // Modified uploadToCloudinary to handle voice messages
   const uploadToCloudinary = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET);
     formData.append("cloud_name", process.env.REACT_APP_CLOUDINARY_CLOUD_NAME);
-    formData.append("resource_type", file.type.startsWith('audio') ? 'video' : 'auto');
+    formData.append("resource_type", file.type.startsWith("audio") ? "video" : "auto");
 
     try {
       setUploading(true);
       const response = await axios.post(
         `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/auto/upload`,
         formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+        { headers: { "Content-Type": "multipart/form-data" } }
       );
 
       setUploading(false);
@@ -101,8 +192,9 @@ function ChatArea() {
     }
   };
 
-  // Modified sendMessage to handle voice messages
   const sendMessage = async () => {
+    if (!messageContent.trim() && !file) return;
+
     const config = {
       headers: {
         Authorization: `Bearer ${userData.data.token}`,
@@ -123,7 +215,7 @@ function ChatArea() {
             isFile: true,
             fileType: file.type,
             fileName: file.name,
-            isVoiceMessage: file.type.startsWith('audio')
+            isVoiceMessage: file.type.startsWith("audio"),
           };
         }
       }
@@ -140,7 +232,6 @@ function ChatArea() {
     }
   };
 
-  // Existing useEffects and handlers remain the same
   useEffect(() => {
     const fetchRecipientName = async () => {
       const config = {
@@ -163,7 +254,7 @@ function ChatArea() {
     } else {
       setRecipientName(chat_user_raw);
     }
-  }, [chat_id, chat_user_raw, userData.data.token]);
+  }, [chat_id, chat_user_raw, userData.data.token, userData.data.name]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -187,15 +278,19 @@ function ChatArea() {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFilePreview(reader.result);
-      };
-      reader.readAsDataURL(selectedFile);
+      
+      if (selectedFile.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFilePreview(reader.result);
+        };
+        reader.readAsDataURL(selectedFile);
+      } else {
+        setFilePreview(null);
+      }
     }
   };
 
-  // Skeleton loader
   if (!loaded) {
     return (
       <div style={{ padding: "10px", display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -208,57 +303,28 @@ function ChatArea() {
 
   return (
     <div className={"chatArea-container" + (lightTheme ? "" : " dark")}>
-      {/* Chat Header */}
       <div className={"chatArea-header" + (lightTheme ? "" : " dark")}>
         <p className={"con-icon" + (lightTheme ? "" : " dark")}>{recipientName[0]}</p>
         <div className={"header-text" + (lightTheme ? "" : " dark")}>
           <p className={"con-title" + (lightTheme ? "" : " dark")}>{recipientName}</p>
         </div>
         <IconButton>
-          <DeleteIcon />
+          <DeleteIcon sx={{ color: "darkorchid" }} />
         </IconButton>
       </div>
 
-      {/* Messages */}
       <div
         className={"messages-container" + (lightTheme ? "" : " dark")}
         style={{ flexGrow: 1, overflowY: "auto", padding: "10px" }}
       >
-        {allMessages.slice(0).reverse().map((message, index) => {
-          const sender = message.sender;
-          const self_id = userData.data._id;
-
-          if (message.isFile) {
-            if (message.isVoiceMessage) {
-              return (
-                <div key={index} style={{ alignSelf: sender._id === self_id ? "flex-end" : "flex-start", margin: "10px" }}>
-                  <audio controls src={message.content} style={{ maxWidth: "250px" }} />
-                </div>
-              );
-            }
-            return (
-              <div key={index} style={{ alignSelf: sender._id === self_id ? "flex-end" : "flex-start" }}>
-                {message.fileType.startsWith("image") ? (
-                  <img src={message.content} alt={message.fileName} style={{ maxWidth: "250px" }} />
-                ) : (
-                  <a href={message.content} target="_blank" rel="noopener noreferrer">
-                    {message.fileName}
-                  </a>
-                )}
-              </div>
-            );
-          }
-
-          return sender._id === self_id ? (
-            <MessageSelf props={message} key={index} />
-          ) : (
-            <MessageOthers props={message} key={index} />
-          );
-        })}
+        {allMessages.slice(0).reverse().map((message, index) => (
+          <div key={index}>
+            {renderMediaContent(message)}
+          </div>
+        ))}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* File/Audio Preview */}
       {(filePreview || audioURL) && (
         <div style={{ display: "flex", alignItems: "center", padding: "10px" }}>
           {file?.type.startsWith("image/") ? (
@@ -268,15 +334,18 @@ function ChatArea() {
           ) : (
             <span>{file?.name}</span>
           )}
-          <IconButton onClick={() => {
-            setFile(null);
-            setFilePreview(null);
-            setAudioURL("");
-          }}>❌</IconButton>
+          <IconButton
+            onClick={() => {
+              setFile(null);
+              setFilePreview(null);
+              setAudioURL("");
+            }}
+          >
+            ❌
+          </IconButton>
         </div>
       )}
 
-      {/* Input Area */}
       <div style={{ display: "flex", alignItems: "center", padding: "10px" }}>
         <input
           placeholder="Type a Message"
@@ -285,12 +354,14 @@ function ChatArea() {
           onChange={(e) => setMessageContent(e.target.value)}
           onKeyDown={(event) => event.code === "Enter" && sendMessage()}
         />
-        <IconButton onClick={sendMessage}>{uploading ? <CloudUploadIcon /> : <SendIcon />}</IconButton>
+        <IconButton onClick={sendMessage} disabled={uploading}>
+          {uploading ? <CloudUploadIcon sx={{ color: "darkorchid" }} /> : <SendIcon sx={{ color: "darkorchid" }} />}
+        </IconButton>
         <IconButton onClick={isRecording ? stopRecording : startRecording}>
-          {isRecording ? <StopIcon style={{ color: "red" }} /> : <MicIcon />}
+          {isRecording ? <StopIcon style={{ color: "red" }} /> : <MicIcon sx={{ color: "darkorchid" }} />}
         </IconButton>
         <IconButton component="label">
-          <AttachFileIcon />
+          <AttachFileIcon sx={{ color: "darkorchid" }} />
           <input type="file" hidden onChange={handleFileChange} />
         </IconButton>
       </div>
@@ -298,4 +369,4 @@ function ChatArea() {
   );
 }
 
-export default ChatArea; 
+export default ChatArea;

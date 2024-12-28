@@ -1,14 +1,16 @@
-import React from "react";
+// MessageSelf.js
+import React from 'react';
+import './MyMessages.css';
+import MediaMessage from './MediaMessage';
 
 function MessageSelf({ props }) {
-  // console.log("Message self Prop : ", props);
   return (
     <div className="self-message-container">
       <div className="messageBox">
-        <p style={{ color: "black" }}>{props.content}</p>
-        {/* <p className="self-timeStamp" style={{ color: "black" }}>
-          12:00am
-        </p> */}
+        <MediaMessage content={props.content} fileType={props.fileType} />
+        <div className="self-timeStamp">
+          {new Date(props.createdAt).toLocaleTimeString()}
+        </div>
       </div>
     </div>
   );
