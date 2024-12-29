@@ -12,13 +12,11 @@ import { refreshSidebarFun } from "../Features/refreshSidebar";
 import { myContext } from "./MainContainer";
 
 function Users() {
-  // const [refresh, setRefresh] = useState(true);
   const { refresh, setRefresh } = useContext(myContext);
-
   const lightTheme = useSelector((state) => state.themeKey);
   const [users, setUsers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const userData = JSON.parse(localStorage.getItem("userData"));
-  // console.log("Data from LocalStorage : ", userData);
   const nav = useNavigate();
   const dispatch = useDispatch();
 
@@ -37,9 +35,41 @@ function Users() {
     axios.get("http://localhost:5000/user/fetchUsers", config).then((data) => {
       console.log("UData refreshed in Users panel ");
       setUsers(data.data);
-      // setRefresh(!refresh);
     });
   }, [refresh]);
+
+  const createChat = async (user) => {
+    try {
+      console.log("Creating chat with ", user.name);
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userData.data.token}`,
+        },
+      };
+
+      const response = await axios.post(
+        "http://localhost:5000/chat/",
+        {
+          userId: user._id,
+        },
+        config
+      );
+
+      if (response.data) {
+        // Refresh sidebar
+        setRefresh(!refresh);
+        dispatch(refreshSidebarFun());
+        
+        nav(`/app/chat/${response.data._id}&${user.name}`);
+      }
+    } catch (error) {
+      console.error("Error creating chat:", error);
+    }
+  };
+
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <AnimatePresence>
@@ -76,34 +106,23 @@ function Users() {
           <input
             placeholder="Search"
             className={"search-box" + (lightTheme ? "" : " dark")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
         <div className="ug-list">
-          {users.map((user, index) => {
+          {filteredUsers.map((user, index) => {
             return (
               <motion.div
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 className={"list-tem" + (lightTheme ? "" : " dark")}
                 key={index}
-                onClick={() => {
-                  console.log("Creating chat with ", user.name);
-                  const config = {
-                    headers: {
-                      Authorization: `Bearer ${userData.data.token}`,
-                    },
-                  };
-                  axios.post(
-                    "http://localhost:5000/chat/",
-                    {
-                      userId: user._id,
-                    },
-                    config
-                  );
-                  dispatch(refreshSidebarFun());
-                }}
+                onClick={() => createChat(user)}
               >
-                <p className={"con-icon" + (lightTheme ? "" : " dark")}>T</p>
+                <p className={"con-icon" + (lightTheme ? "" : " dark")}>
+                  {user.name[0].toUpperCase()}
+                </p>
                 <p className={"con-title" + (lightTheme ? "" : " dark")}>
                   {user.name}
                 </p>

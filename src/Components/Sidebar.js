@@ -21,6 +21,7 @@ function Sidebar() {
   const { refresh, setRefresh } = useContext(myContext);
 
   const [conversations, setConversations] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const userData = JSON.parse(localStorage.getItem("userData"));
   const user = userData?.data;
 
@@ -38,17 +39,30 @@ function Sidebar() {
 
     axios.get("http://localhost:5000/chat/", config).then((response) => {
       setConversations(response.data);
-      //setRefresh(!refresh);
     });
   }, [refresh, user.token, setRefresh]);
 
   const getReceiverName = (conversation) => {
-    // Filter the user to identify the receiver
+    if (conversation.isGroupChat) {
+      return conversation.chatName;
+    }
+    
     const receiver = conversation.users.find(
       (participant) => participant._id !== user._id
     );
-    return receiver?.name || "Unknown User"; // Fallback to "Unknown User" if no match
+    return receiver?.name || "Unknown User";
   };
+
+
+  const filteredConversations = conversations.filter(conversation => {
+    const name = getReceiverName(conversation).toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Also search in latest message if it exists
+    const latestMessage = conversation.latestMessage?.content?.toLowerCase() || "";
+    
+    return name.includes(searchLower) || latestMessage.includes(searchLower);
+  });
 
   return (
     <div className="sidebar-container">
@@ -137,17 +151,19 @@ function Sidebar() {
         <input
           placeholder="Search"
           className={"search-box" + (lightTheme ? "" : " dark")}
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
         />
       </div>
 
       {/* Conversations */}
       <div className={"sb-conversations" + (lightTheme ? "" : " dark")}>
-        {conversations.map((conversation, index) => {
+        {filteredConversations.map((conversation, index) => {
           if (conversation.users.length === 1) {
             return <div key={index}></div>;
           }
 
-          const receiverName = getReceiverName(conversation);
+          const displayName = getReceiverName(conversation);
 
           if (!conversation.latestMessage) {
             return (
@@ -155,17 +171,19 @@ function Sidebar() {
                 key={index}
                 className="conversation-container"
                 onClick={() => {
-                  navigate("chat/" + conversation._id + "&" + receiverName);
+                  navigate("chat/" + conversation._id + "&" + displayName);
                 }}
               >
                 <p className={"con-icon" + (lightTheme ? "" : " dark")}>
-                  {receiverName[0]}
+                  {displayName[0]}
                 </p>
                 <p className={"con-title" + (lightTheme ? "" : " dark")}>
-                  {receiverName}
+                  {displayName}
                 </p>
                 <p className="con-lastMessage">
-                  No previous messages, click here to start a new chat.
+                  {conversation.isGroupChat 
+                    ? "Group Chat - No messages yet" 
+                    : "No previous messages, click here to start a new chat."}
                 </p>
               </div>
             );
@@ -175,14 +193,14 @@ function Sidebar() {
                 key={index}
                 className="conversation-container"
                 onClick={() => {
-                  navigate("chat/" + conversation._id + "&" + receiverName);
+                  navigate("chat/" + conversation._id + "&" + displayName);
                 }}
               >
                 <p className={"con-icon" + (lightTheme ? "" : " dark")}>
-                  {receiverName[0]}
+                  {displayName[0]}
                 </p>
                 <p className={"con-title" + (lightTheme ? "" : " dark")}>
-                  {receiverName}
+                  {displayName}
                 </p>
                 <p className="con-lastMessage">
                   {conversation.latestMessage.content}

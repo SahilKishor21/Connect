@@ -309,7 +309,7 @@ function ChatArea() {
           <p className={"con-title" + (lightTheme ? "" : " dark")}>{recipientName}</p>
         </div>
         <IconButton>
-          <DeleteIcon sx={{ color: "darkorchid" }} />
+          <DeleteIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
         </IconButton>
       </div>
 
@@ -355,13 +355,13 @@ function ChatArea() {
           onKeyDown={(event) => event.code === "Enter" && sendMessage()}
         />
         <IconButton onClick={sendMessage} disabled={uploading}>
-          {uploading ? <CloudUploadIcon sx={{ color: "darkorchid" }} /> : <SendIcon sx={{ color: "darkorchid" }} />}
+          {uploading ? <CloudUploadIcon sx={{ color: "darkorchid" }}  /> : <SendIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />}
         </IconButton>
         <IconButton onClick={isRecording ? stopRecording : startRecording}>
-          {isRecording ? <StopIcon style={{ color: "red" }} /> : <MicIcon sx={{ color: "darkorchid" }} />}
+          {isRecording ? <StopIcon style={{ color: "red" }} className={"icon" + (lightTheme ? "" : " dark")} /> : <MicIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />}
         </IconButton>
         <IconButton component="label">
-          <AttachFileIcon sx={{ color: "darkorchid" }} />
+          <AttachFileIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
           <input type="file" hidden onChange={handleFileChange} />
         </IconButton>
       </div>

@@ -87,10 +87,10 @@ function CreateGroups() {
           </DialogActions>
         </Dialog>
       </div>
-      <div className={"createGroups-container" + (lightTheme ? "" : " dark")}>
+      <div className={"createGroups-container" }>
         <input
           placeholder="Enter Group Name"
-          className={"search-box" + (lightTheme ? "" : " dark")}
+          className={"search-box" }
           onChange={(e) => {
             setGroupName(e.target.value);
           }}

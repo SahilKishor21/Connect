@@ -11,23 +11,22 @@ import { useNavigate } from "react-router-dom";
 import { refreshSidebarFun } from "../Features/refreshSidebar";
 import { myContext } from "./MainContainer";
 
-
 function Groups() {
-  // const [refresh, setRefresh] = useState(true);
   const { refresh, setRefresh } = useContext(myContext);
-
   const lightTheme = useSelector((state) => state.themeKey);
   const dispatch = useDispatch();
   const [groups, SetGroups] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
   const userData = JSON.parse(localStorage.getItem("userData"));
-  // console.log("Data from LocalStorage : ", userData);
   const nav = useNavigate();
+  
   if (!userData) {
     console.log("User not Authenticated");
     nav("/");
   }
 
   const user = userData.data;
+  
   useEffect(() => {
     console.log("Users refreshed : ", user.token);
     const config = {
@@ -43,6 +42,38 @@ function Groups() {
         SetGroups(response.data);
       });
   }, [refresh]);
+
+  const joinGroup = async (group) => {
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+        },
+      };
+
+      const response = await axios.post(
+        "http://localhost:5000/chat/",
+        {
+          isGroup: true,
+          chatId: group._id,
+          userId: user._id
+        },
+        config
+      );
+
+      if (response.data) {
+        setRefresh(!refresh);
+        dispatch(refreshSidebarFun());
+        nav(`/app/chat/${response.data._id}&${response.data.chatName}`);
+      }
+    } catch (error) {
+      console.error("Error joining group:", error.response?.data?.message || "Failed to join group");
+    }
+  };
+
+  const filteredGroups = groups.filter(group => 
+    group.chatName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <AnimatePresence>
@@ -80,36 +111,23 @@ function Groups() {
           <input
             placeholder="Search"
             className={"search-box" + (lightTheme ? "" : " dark")}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="ug-list">
-          {groups.map((group, index) => {
+          {filteredGroups.map((group, index) => {
             return (
               <motion.div
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 className={"list-tem" + (lightTheme ? "" : " dark")}
                 key={index}
-                onClick={() => {
-                  console.log("Creating chat with group", group.name);
-                   const config = {
-                     headers: {
-                       Authorization: `Bearer ${userData.data.token}`,
-                     },
-                   };
-                   axios.post(
-                     "http://localhost:5000/chat/",
-                     {
-                       userId: user._id,
-                        lastMessage: "",
-                        groupAdmin: user._id,
-                    },
-                     config
-                   );
-                  dispatch(refreshSidebarFun());
-                }}
+                onClick={() => joinGroup(group)}
               >
-                <p className={"con-icon" + (lightTheme ? "" : " dark")}>T</p>
+                <p className={"con-icon" + (lightTheme ? "" : " dark")}>
+                  {group.chatName[0]}
+                </p>
                 <p className={"con-title" + (lightTheme ? "" : " dark")}>
                   {group.chatName}
                 </p>

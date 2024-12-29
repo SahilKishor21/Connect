@@ -130,7 +130,7 @@ function Login() {
               }}
             />
             <Button
-              variant="outlined"
+              variant="contained"
               color="secondary"
               onClick={loginHandler}
               isLoading
@@ -201,7 +201,7 @@ function Login() {
               }}
             />
             <Button
-              variant="outlined"
+              variant="contained"
               color="secondary"
               onClick={signUpHandler}
             >
