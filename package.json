@@ -19,14 +19,17 @@
     "firebase": "^11.1.0",
     "firebase-admin": "^13.0.1",
     "framer-motion": "^10.12.7",
+    "lucide-react": "^0.469.0",
     "multer-storage-cloudinary": "^4.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.10.0",
     "react-scripts": "5.0.1",
+    "socket.io-client": "^4.8.1",
     "uuid": "^11.0.3",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "webrtc-adapter": "^9.0.1"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -505,3 +505,9 @@ input:focus {
 .dark .message-timestamp {
   color: rgba(255, 255, 255, 0.7);
 }
+
+.call-buttons {
+  display: flex;
+  gap: 8px;
+  margin-left: 4px;
+}

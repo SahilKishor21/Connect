@@ -5,6 +5,8 @@ import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import MicIcon from "@mui/icons-material/Mic";
+import CallIcon from '@mui/icons-material/Call';
+import VideocamIcon from '@mui/icons-material/Videocam';
 import StopIcon from "@mui/icons-material/Stop";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -13,6 +15,8 @@ import axios from "axios";
 import { myContext } from "./MainContainer";
 import MessageSelf from "./MessageSelf";
 import MessageOthers from "./MessageOthers";
+import { Phone, Video } from 'lucide-react';
+import CallInterface from "./Call";
 
 function ChatArea() {
   const [messageContent, setMessageContent] = useState("");
@@ -32,6 +36,17 @@ function ChatArea() {
   const { refresh, setRefresh } = useContext(myContext);
   const [loaded, setLoaded] = useState(false);
   const [recipientName, setRecipientName] = useState("");
+  const [callInterface, setCallInterface] = useState({
+    isOpen: false,
+    type: null
+  });
+
+  const startCall = (callType) => {
+    setCallInterface({
+      isOpen: true,
+      type: callType
+    });
+  };
 
   // Function to render media content based on file type
   const renderMediaContent = (message) => {
@@ -307,6 +322,16 @@ function ChatArea() {
         <p className={"con-icon" + (lightTheme ? "" : " dark")}>{recipientName[0]}</p>
         <div className={"header-text" + (lightTheme ? "" : " dark")}>
           <p className={"con-title" + (lightTheme ? "" : " dark")}>{recipientName}</p>
+          <p className={"con-timestamp" + (lightTheme ? "" : " dark")}></p>
+        </div>
+        <div className="call-buttons">
+            <CallIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} 
+            onClick={() => startCall('audio')}
+            />
+
+            <VideocamIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} 
+             onClick={() => startCall('video')}/>
+         
         </div>
         <IconButton>
           <DeleteIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
@@ -365,6 +390,14 @@ function ChatArea() {
           <input type="file" hidden onChange={handleFileChange} />
         </IconButton>
       </div>
+
+      <CallInterface
+        isOpen={callInterface.isOpen}
+        onClose={() => setCallInterface({ isOpen: false, type: null })}
+        recipientId={chat_user_raw}
+        recipientName={recipientName}
+        initialCallType={callInterface.type}
+      />
     </div>
   );
 }
