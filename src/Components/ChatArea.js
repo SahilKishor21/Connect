@@ -265,7 +265,7 @@ function ChatArea() {
       };
       try {
         const { data } = await axios.get(
-          `https://connect-server-1a2y.onrender.com//message/recipient/${chat_id}`,
+          `https://connect-server-1a2y.onrender.com/message/recipient/${chat_id}`,
           config
         );
         setRecipientName(data.recipientName);
@@ -292,7 +292,7 @@ function ChatArea() {
     };
 
     axios
-      .get(`https://connect-server-1a2y.onrender.com//message/${chat_id}`, config)
+      .get(`https://connect-server-1a2y.onrender.com/message/${chat_id}`, config)
       .then(({ data }) => {
         setAllMessages(data);
         setLoaded(true);
