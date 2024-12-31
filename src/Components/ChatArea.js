@@ -66,6 +66,13 @@ function ChatArea() {
       marginBottom: "5px",
     };
 
+    const senderNameStyle = {
+      fontSize: "12px",
+      fontWeight: "bold",
+      color: "#666",
+      marginBottom: "4px"
+    };
+
     // Helper function to detect file type from URL
     const getFileTypeFromUrl = (url) => {
       const extension = url.split('.').pop().toLowerCase();
@@ -87,6 +94,7 @@ function ChatArea() {
                 alt="Shared media"
                 style={contentStyle}
               />
+              <div style={senderNameStyle}>{message.sender}</div>
               {message.fileName && (
                 <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
               )}
@@ -100,6 +108,7 @@ function ChatArea() {
                 <source src={content} type={fileType || 'audio/webm'} />
                 Your browser does not support the audio element.
               </audio>
+              <div style={senderNameStyle}>{message.sender}</div>
               {message.fileName && (
                 <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
               )}
@@ -113,6 +122,7 @@ function ChatArea() {
                 <source src={content} type={fileType || 'video/mp4'} />
                 Your browser does not support the video element.
               </video>
+              <div style={senderNameStyle}>{message.sender}</div>
               {message.fileName && (
                 <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
               )}
@@ -125,6 +135,7 @@ function ChatArea() {
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <AttachFileIcon />
                 <div>
+                <div style={senderNameStyle}>{message.sender}</div>
                   <div style={{ wordBreak: "break-word" }}>{message.fileName || 'Download file'}</div>
                   <a
                     href={content}
@@ -324,7 +335,6 @@ function ChatArea() {
           <p className={"con-title" + (lightTheme ? "" : " dark")}>{recipientName}</p>
           <p className={"con-timestamp" + (lightTheme ? "" : " dark")}></p>
         </div>
-        <div className="call-buttons">
             <CallIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} 
             onClick={() => startCall('audio')}
             />
@@ -332,7 +342,6 @@ function ChatArea() {
             <VideocamIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} 
              onClick={() => startCall('video')}/>
          
-        </div>
         <IconButton>
           <DeleteIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
         </IconButton>
