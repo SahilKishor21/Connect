@@ -32,7 +32,7 @@ function Users() {
         Authorization: `Bearer ${userData.data.token}`,
       },
     };
-    axios.get("https://connect-server-mu.vercel.app/user/fetchUsers", config).then((data) => {
+    axios.get("https://connect-server-1a2y.onrender.com/user/fetchUsers", config).then((data) => {
       console.log("UData refreshed in Users panel ");
       setUsers(data.data);
     });
@@ -48,7 +48,7 @@ function Users() {
       };
 
       const response = await axios.post(
-        "https://connect-server-mu.vercel.app/chat/",
+        "https://connect-server-1a2y.onrender.com/chat/",
         {
           userId: user._id,
         },

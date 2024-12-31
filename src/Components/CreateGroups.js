@@ -45,7 +45,7 @@ function CreateGroups() {
     };
 
     axios.post(
-      "https://connect-server-mu.vercel.app/chat/createGroup",
+      "https://connect-server-1a2y.onrender.com/chat/createGroup",
       {
         name: groupName,
         users: '["647d94aea97e40a17278c7e5","647d999e4c3dd7ca9a2e6543"]',

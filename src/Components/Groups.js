@@ -36,7 +36,7 @@ function Groups() {
     };
 
     axios
-      .get("https://connect-server-mu.vercel.app/chat/fetchGroups", config)
+      .get("https://connect-server-1a2y.onrender.com/chat/fetchGroups", config)
       .then((response) => {
         console.log("Group Data from API ", response.data);
         SetGroups(response.data);
@@ -52,7 +52,7 @@ function Groups() {
       };
 
       const response = await axios.post(
-        "https://connect-server-mu.vercel.app/chat/",
+        "https://connect-server-1a2y.onrender.com/chat/",
         {
           isGroup: true,
           chatId: group._id,
