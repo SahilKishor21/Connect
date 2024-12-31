@@ -37,7 +37,7 @@ function Sidebar() {
       },
     };
 
-    axios.get("http://localhost:5000/chat/", config).then((response) => {
+    axios.get("https://connect-server-mu.vercel.app/chat/", config).then((response) => {
       setConversations(response.data);
     });
   }, [refresh, user.token, setRefresh]);

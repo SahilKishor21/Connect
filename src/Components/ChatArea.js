@@ -246,7 +246,7 @@ function ChatArea() {
         }
       }
 
-      await axios.post("http://localhost:5000/message/", messageData, config);
+      await axios.post("https://connect-server-mu.vercel.app/message/", messageData, config);
 
       setFile(null);
       setFilePreview(null);
@@ -265,7 +265,7 @@ function ChatArea() {
       };
       try {
         const { data } = await axios.get(
-          `http://localhost:5000/message/recipient/${chat_id}`,
+          `https://connect-server-mu.vercel.app/message/recipient/${chat_id}`,
           config
         );
         setRecipientName(data.recipientName);
@@ -292,7 +292,7 @@ function ChatArea() {
     };
 
     axios
-      .get(`http://localhost:5000/message/${chat_id}`, config)
+      .get(`https://connect-server-mu.vercel.app/message/${chat_id}`, config)
       .then(({ data }) => {
         setAllMessages(data);
         setLoaded(true);
