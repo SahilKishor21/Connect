@@ -41,7 +41,7 @@ function CreateGroups() {
     const config = {
       headers: {
         Authorization: `Bearer ${user.token}`,
-        withCredentials: true,
+        credentials: "include",
       },
     };
 

@@ -54,7 +54,7 @@ function Login() {
       const config = {
         headers: {
           "Content-type": "application/json",
-          withCredentials: true,
+          credentials: "include",
         },
       };
 

@@ -225,7 +225,7 @@ function ChatArea() {
       headers: {
         Authorization: `Bearer ${userData.data.token}`,
         "Content-Type": "application/json",
-        withCredentials: true,
+        credentials: "include",
       },
     };
 
@@ -263,7 +263,7 @@ function ChatArea() {
     const fetchRecipientName = async () => {
       const config = {
         headers: { Authorization: `Bearer ${userData.data.token}`,
-        withCredentials: true,
+        credentials: "include",
       },
       };
       try {
@@ -291,7 +291,7 @@ function ChatArea() {
 
   useEffect(() => {
     const config = {
-      headers: { Authorization: `Bearer ${userData.data.token}`, withCredentials: true },
+      headers: { Authorization: `Bearer ${userData.data.token}`, credentials: "include" },
     };
 
     axios
