@@ -30,6 +30,7 @@ function Users() {
     const config = {
       headers: {
         Authorization: `Bearer ${userData.data.token}`,
+        withCredentials: true,
       },
     };
     axios.get("https://connect-server-1a2y.onrender.com/user/fetchUsers", config).then((data) => {
@@ -44,6 +45,7 @@ function Users() {
       const config = {
         headers: {
           Authorization: `Bearer ${userData.data.token}`,
+          withCredentials: true,
         },
       };
 

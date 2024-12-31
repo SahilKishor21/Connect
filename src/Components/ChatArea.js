@@ -225,6 +225,7 @@ function ChatArea() {
       headers: {
         Authorization: `Bearer ${userData.data.token}`,
         "Content-Type": "application/json",
+        withCredentials: true,
       },
     };
 
@@ -261,7 +262,9 @@ function ChatArea() {
   useEffect(() => {
     const fetchRecipientName = async () => {
       const config = {
-        headers: { Authorization: `Bearer ${userData.data.token}` },
+        headers: { Authorization: `Bearer ${userData.data.token}`,
+        withCredentials: true,
+      },
       };
       try {
         const { data } = await axios.get(
@@ -288,7 +291,7 @@ function ChatArea() {
 
   useEffect(() => {
     const config = {
-      headers: { Authorization: `Bearer ${userData.data.token}` },
+      headers: { Authorization: `Bearer ${userData.data.token}`, withCredentials: true },
     };
 
     axios
