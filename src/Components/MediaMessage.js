@@ -23,7 +23,7 @@ const MediaMessage = ({ content, fileType }) => {
           <img src={content} alt="Shared media" style={{ maxWidth: '100%', borderRadius: '8px' }} />
         </div>
       );
-    case 'video': // This will handle both audio and video from Cloudinary
+    case 'video': 
       return (
         <div style={messageStyle}>
           <audio controls style={{ maxWidth: '100%' }}>

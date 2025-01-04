@@ -15,8 +15,8 @@ import axios from "axios";
 import { myContext } from "./MainContainer";
 import MessageSelf from "./MessageSelf";
 import MessageOthers from "./MessageOthers";
-import { Phone, Video } from 'lucide-react';
 import CallInterface from "./Call";
+import io from 'socket.io-client';
 
 function ChatArea() {
   const [messageContent, setMessageContent] = useState("");
@@ -29,6 +29,7 @@ function ChatArea() {
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
   const dyParams = useParams();
   const [chat_id, chat_user_raw] = dyParams._id.split("&");
   const userData = JSON.parse(localStorage.getItem("userData"));
@@ -36,10 +37,68 @@ function ChatArea() {
   const { refresh, setRefresh } = useContext(myContext);
   const [loaded, setLoaded] = useState(false);
   const [recipientName, setRecipientName] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [isRecipientTyping, setIsRecipientTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
   const [callInterface, setCallInterface] = useState({
     isOpen: false,
     type: null
   });
+
+  useEffect(() => {
+    socketRef.current = io('https://connect-server-1a2y.onrender.com', {
+      auth: { token: userData.data.token }
+    });
+
+    socketRef.current.emit('join', { chatId: chat_id });
+
+    socketRef.current.on('message received', (newMessage) => {
+      setAllMessages(prev => [newMessage, ...prev]);
+    });
+
+    socketRef.current.on('typing', ({ userId }) => {
+      if (userId !== userData.data._id) {
+        setIsRecipientTyping(true);
+      }
+    });
+
+    socketRef.current.on('stop typing', ({ userId }) => {
+      if (userId !== userData.data._id) {
+        setIsRecipientTyping(false);
+      }
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.emit('leave', { chatId: chat_id });
+        socketRef.current.disconnect();
+      }
+    };
+  }, [chat_id, userData.data.token, userData.data._id]);
+
+  useEffect(() => {
+    if (messageContent && !typing) {
+      setTyping(true);
+      socketRef.current.emit('typing', { chatId: chat_id, userId: userData.data._id });
+    }
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      if (typing) {
+        setTyping(false);
+        socketRef.current.emit('stop typing', { chatId: chat_id, userId: userData.data._id });
+      }
+    }, 3000);
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [messageContent, chat_id, userData.data._id, typing]);
 
   const startCall = (callType) => {
     setCallInterface({
@@ -48,7 +107,6 @@ function ChatArea() {
     });
   };
 
-  // Function to render media content based on file type
   const renderMediaContent = (message) => {
     const { content, fileType } = message;
     const messageStyle = {
@@ -73,7 +131,6 @@ function ChatArea() {
       marginBottom: "4px"
     };
 
-    // Helper function to detect file type from URL
     const getFileTypeFromUrl = (url) => {
       const extension = url.split('.').pop().toLowerCase();
       if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) return 'image';
@@ -89,11 +146,7 @@ function ChatArea() {
         case 'image':
           return (
             <div style={messageStyle}>
-              <img
-                src={content}
-                alt="Shared media"
-                style={contentStyle}
-              />
+              <img src={content} alt="Shared media" style={contentStyle} />
               <div style={senderNameStyle}>{message.sender}</div>
               {message.fileName && (
                 <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
@@ -135,13 +188,9 @@ function ChatArea() {
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <AttachFileIcon />
                 <div>
-                <div style={senderNameStyle}>{message.sender}</div>
+                  <div style={senderNameStyle}>{message.sender}</div>
                   <div style={{ wordBreak: "break-word" }}>{message.fileName || 'Download file'}</div>
-                  <a
-                    href={content}
-                    download
-                    style={{ color: "#007bff", textDecoration: "none" }}
-                  >
+                  <a href={content} download style={{ color: "#007bff", textDecoration: "none" }}>
                     Download
                   </a>
                 </div>
@@ -151,7 +200,6 @@ function ChatArea() {
       }
     }
 
-    // Return text message if not a file
     return message.sender._id === userData.data._id ? (
       <MessageSelf props={message} />
     ) : (
@@ -247,13 +295,28 @@ function ChatArea() {
         }
       }
 
-      await axios.post("https://connect-server-1a2y.onrender.com/message/", messageData, config);
+      const { data } = await axios.post(
+        "https://connect-server-1a2y.onrender.com/message/",
+        messageData,
+        config
+      );
+
+      socketRef.current.emit('new message', {
+        ...data,
+        chatId: chat_id,
+        receiverId
+      });
 
       setFile(null);
       setFilePreview(null);
       setMessageContent("");
       setAudioURL("");
       setRefresh(!refresh);
+
+      if (typing) {
+        setTyping(false);
+        socketRef.current.emit('stop typing', { chatId: chat_id, userId: userData.data._id });
+      }
     } catch (error) {
       console.error("Message send error:", error);
     }
@@ -262,9 +325,10 @@ function ChatArea() {
   useEffect(() => {
     const fetchRecipientName = async () => {
       const config = {
-        headers: { Authorization: `Bearer ${userData.data.token}`,
-        credentials: "include",
-      },
+        headers: {
+          Authorization: `Bearer ${userData.data.token}`,
+          credentials: "include",
+        },
       };
       try {
         const { data } = await axios.get(
@@ -291,7 +355,10 @@ function ChatArea() {
 
   useEffect(() => {
     const config = {
-      headers: { Authorization: `Bearer ${userData.data.token}`, credentials: "include" },
+      headers: {
+        Authorization: `Bearer ${userData.data.token}`,
+        credentials: "include"
+      },
     };
 
     axios
@@ -338,22 +405,28 @@ function ChatArea() {
           <p className={"con-title" + (lightTheme ? "" : " dark")}>{recipientName}</p>
           <p className={"con-timestamp" + (lightTheme ? "" : " dark")}></p>
         </div>
-            <CallIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} 
-            onClick={() => startCall('audio')}
-            />
-
-            <VideocamIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} 
-             onClick={() => startCall('video')}/>
-         
+        <CallIcon 
+          sx={{ color: "darkorchid" }} 
+          className={"icon" + (lightTheme ? "" : " dark")} 
+          onClick={() => startCall('audio')}
+        />
+        <VideocamIcon 
+          sx={{ color: "darkorchid" }} 
+          className={"icon" + (lightTheme ? "" : " dark")}
+          onClick={() => startCall('video')}
+        />
         <IconButton>
           <DeleteIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
         </IconButton>
       </div>
 
-      <div
-        className={"messages-container" + (lightTheme ? "" : " dark")}
-        style={{ flexGrow: 1, overflowY: "auto", padding: "10px" }}
-      >
+      <div className={"messages-container" + (lightTheme ? "" : " dark")}
+        style={{ flexGrow: 1, overflowY: "auto", padding: "10px" }}>
+        {isRecipientTyping && (
+          <div className="typing-indicator" style={{ padding: "5px 10px", color: "#666" }}>
+            {recipientName} is typing...
+          </div>
+        )}
         {allMessages.slice(0).reverse().map((message, index) => (
           <div key={index}>
             {renderMediaContent(message)}
@@ -392,10 +465,18 @@ function ChatArea() {
           onKeyDown={(event) => event.code === "Enter" && sendMessage()}
         />
         <IconButton onClick={sendMessage} disabled={uploading}>
-          {uploading ? <CloudUploadIcon sx={{ color: "darkorchid" }}  /> : <SendIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />}
+          {uploading ? (
+            <CloudUploadIcon sx={{ color: "darkorchid" }} />
+          ) : (
+            <SendIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
+          )}
         </IconButton>
         <IconButton onClick={isRecording ? stopRecording : startRecording}>
-          {isRecording ? <StopIcon style={{ color: "red" }} className={"icon" + (lightTheme ? "" : " dark")} /> : <MicIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />}
+          {isRecording ? (
+            <StopIcon style={{ color: "red" }} className={"icon" + (lightTheme ? "" : " dark")} />
+          ) : (
+            <MicIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
+          )}
         </IconButton>
         <IconButton component="label">
           <AttachFileIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
