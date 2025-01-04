@@ -83,3 +83,18 @@
     justify-content: center;
     color: #666;
 }
+
+.message-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+  
+  .sender-name {
+    font-size: 1rem;
+    color:lightgray;
+    margin-left: 10px;
+    margin-bottom: 2px;
+    font-weight: 500;
+  }

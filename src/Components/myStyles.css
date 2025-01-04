@@ -1,5 +1,5 @@
 .dark {
-  background-color: #2d3941 !important;
+  background-color: #1E1E2C !important;
   color: lightgray !important;
 }
 
@@ -14,16 +14,66 @@
   width: 90vw;
   display: flex;
   border-radius: 20px;
+  position: relative; 
 }
 
 .sidebar-container {
   flex: 0.3;
+  min-width: 250px;
+  max-width: 600px;
   display: flex;
   flex-direction: column;
+  position: relative;
+  /* Make resize handle easier to grab */
+  padding-right: 10px; /* Space for resize handle */
+  resize: horizontal;
+  overflow-x: hidden; /* Hide horizontal scrollbar */
+  overflow-y: auto; /* Show vertical scrollbar */
+}
+
+/* Style the resize handle */
+.sidebar-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+}
+
+/* Highlight resize area on hover */
+.sidebar-container::after:hover {
+  background: rgba(147, 112, 219, 0.1);
+}
+
+/* Custom scrollbar styling */
+.sidebar-container::-webkit-scrollbar {
+  width: 10px;
+  cursor: col-resize;
+}
+
+.sidebar-container::-webkit-scrollbar-thumb {
+  background: darkorchid;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.sidebar-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* For Firefox */
+.sidebar-container {
+  scrollbar-width: thin;
+  
 }
 
 .chatArea-container {
-  flex: 0.7;
+  flex: 1; /* Changed from 0.7 to 1 to allow proper resizing */
+  min-width: 300px; /* Ensure chat area doesn't get too small */
 }
 
 .sb-header {
@@ -35,6 +85,11 @@
   justify-content: space-between;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 6px 12px -2px,
     rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
+}
+
+.sidebar-container {
+  scrollbar-width: thin;
+  
 }
 
 .sb-search {
@@ -71,6 +126,7 @@ input:focus {
     rgba(0, 0, 0, 0.3) 0px 3px 7px -3px;
   margin: 10px;
   overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .conversation-container {
