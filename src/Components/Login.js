@@ -30,7 +30,7 @@ function Login() {
       };
 
       const response = await axios.post(
-        "https://connect-server-1a2y.onrender.com/user/login/",
+        "http://localhost:5000/user/login/",
         data,
         config
       );
@@ -59,7 +59,7 @@ function Login() {
       };
 
       const response = await axios.post(
-        "https://connect-server-1a2y.onrender.com/user/register/",
+        "http://localhost:5000/user/register/",
         data,
         config
       );

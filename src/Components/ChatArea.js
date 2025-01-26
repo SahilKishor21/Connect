@@ -5,8 +5,8 @@ import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import MicIcon from "@mui/icons-material/Mic";
-import CallIcon from '@mui/icons-material/Call';
-import VideocamIcon from '@mui/icons-material/Videocam';
+import CallIcon from "@mui/icons-material/Call";
+import VideocamIcon from "@mui/icons-material/Videocam";
 import StopIcon from "@mui/icons-material/Stop";
 import { useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
@@ -16,7 +16,7 @@ import { myContext } from "./MainContainer";
 import MessageSelf from "./MessageSelf";
 import MessageOthers from "./MessageOthers";
 import CallInterface from "./Call";
-import io from 'socket.io-client';
+import io from "socket.io-client";
 
 function ChatArea() {
   const [messageContent, setMessageContent] = useState("");
@@ -26,10 +26,11 @@ function ChatArea() {
   const lightTheme = useSelector((state) => state.themeKey);
   const [isRecording, setIsRecording] = useState(false);
   const [audioURL, setAudioURL] = useState("");
+  const chatContainerRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const messagesEndRef = useRef(null);
-  const socketRef = useRef(null);
+  const socketRef = useRef(null); // Added for Socket.IO
   const dyParams = useParams();
   const [chat_id, chat_user_raw] = dyParams._id.split("&");
   const userData = JSON.parse(localStorage.getItem("userData"));
@@ -42,44 +43,46 @@ function ChatArea() {
   const typingTimeoutRef = useRef(null);
   const [callInterface, setCallInterface] = useState({
     isOpen: false,
-    type: null
+    type: null,
   });
 
   useEffect(() => {
-    socketRef.current = io('https://connect-server-1a2y.onrender.com', {
-      auth: { token: userData.data.token }
+    // Connect to Socket.IO server
+    socketRef.current = io("https://connect-server-1a2y.onrender.com", {
+      auth: { token: userData.data.token },
     });
 
-    socketRef.current.emit('join', { chatId: chat_id });
+    // Join the chat room
+    socketRef.current.emit("join", { chatId: chat_id });
 
-    socketRef.current.on('message received', (newMessage) => {
-      setAllMessages(prev => [newMessage, ...prev]);
+    // Listen for incoming messages
+    socketRef.current.on("message received", (newMessage) => {
+      setAllMessages((prev) => [newMessage, ...prev]);
     });
 
-    socketRef.current.on('typing', ({ userId }) => {
+    // Listen for typing indicators
+    socketRef.current.on("typing", ({ userId }) => {
       if (userId !== userData.data._id) {
         setIsRecipientTyping(true);
       }
     });
 
-    socketRef.current.on('stop typing', ({ userId }) => {
+    socketRef.current.on("stop typing", ({ userId }) => {
       if (userId !== userData.data._id) {
         setIsRecipientTyping(false);
       }
     });
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.emit('leave', { chatId: chat_id });
-        socketRef.current.disconnect();
-      }
+      socketRef.current.emit("leave", { chatId: chat_id });
+      socketRef.current.disconnect();
     };
   }, [chat_id, userData.data.token, userData.data._id]);
 
   useEffect(() => {
     if (messageContent && !typing) {
       setTyping(true);
-      socketRef.current.emit('typing', { chatId: chat_id, userId: userData.data._id });
+      socketRef.current.emit("typing", { chatId: chat_id, userId: userData.data._id });
     }
 
     if (typingTimeoutRef.current) {
@@ -89,7 +92,7 @@ function ChatArea() {
     typingTimeoutRef.current = setTimeout(() => {
       if (typing) {
         setTyping(false);
-        socketRef.current.emit('stop typing', { chatId: chat_id, userId: userData.data._id });
+        socketRef.current.emit("stop typing", { chatId: chat_id, userId: userData.data._id });
       }
     }, 3000);
 
@@ -103,7 +106,7 @@ function ChatArea() {
   const startCall = (callType) => {
     setCallInterface({
       isOpen: true,
-      type: callType
+      type: callType,
     });
   };
 
@@ -128,60 +131,51 @@ function ChatArea() {
       fontSize: "12px",
       fontWeight: "bold",
       color: "#666",
-      marginBottom: "4px"
+      marginBottom: "4px",
     };
 
     const getFileTypeFromUrl = (url) => {
-      const extension = url.split('.').pop().toLowerCase();
-      if (['jpg', 'jpeg', 'png', 'gif'].includes(extension)) return 'image';
-      if (['mp3', 'wav', 'webm'].includes(extension)) return 'audio';
-      if (['mp4', 'webm', 'ogg'].includes(extension)) return 'video';
-      return 'other';
+      const extension = url.split(".").pop().toLowerCase();
+      if (["jpg", "jpeg", "png", "gif"].includes(extension)) return "image";
+      if (["mp3", "wav", "webm"].includes(extension)) return "audio";
+      if (["mp4", "webm", "ogg"].includes(extension)) return "video";
+      return "other";
     };
 
     if (message.isFile) {
-      const mediaType = fileType ? fileType.split('/')[0] : getFileTypeFromUrl(content);
+      const mediaType = fileType ? fileType.split("/")[0] : getFileTypeFromUrl(content);
 
       switch (mediaType) {
-        case 'image':
+        case "image":
           return (
             <div style={messageStyle}>
               <img src={content} alt="Shared media" style={contentStyle} />
               <div style={senderNameStyle}>{message.sender}</div>
-              {message.fileName && (
-                <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
-              )}
+              {message.fileName && <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>}
             </div>
           );
-
-        case 'audio':
+        case "audio":
           return (
             <div style={messageStyle}>
               <audio controls style={contentStyle}>
-                <source src={content} type={fileType || 'audio/webm'} />
+                <source src={content} type={fileType || "audio/webm"} />
                 Your browser does not support the audio element.
               </audio>
               <div style={senderNameStyle}>{message.sender}</div>
-              {message.fileName && (
-                <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
-              )}
+              {message.fileName && <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>}
             </div>
           );
-
-        case 'video':
+        case "video":
           return (
             <div style={messageStyle}>
               <video controls style={contentStyle}>
-                <source src={content} type={fileType || 'video/mp4'} />
+                <source src={content} type={fileType || "video/mp4"} />
                 Your browser does not support the video element.
               </video>
               <div style={senderNameStyle}>{message.sender}</div>
-              {message.fileName && (
-                <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>
-              )}
+              {message.fileName && <div style={{ fontSize: "12px", color: "#666" }}>{message.fileName}</div>}
             </div>
           );
-
         default:
           return (
             <div style={messageStyle}>
@@ -189,7 +183,7 @@ function ChatArea() {
                 <AttachFileIcon />
                 <div>
                   <div style={senderNameStyle}>{message.sender}</div>
-                  <div style={{ wordBreak: "break-word" }}>{message.fileName || 'Download file'}</div>
+                  <div style={{ wordBreak: "break-word" }}>{message.fileName || "Download file"}</div>
                   <a href={content} download style={{ color: "#007bff", textDecoration: "none" }}>
                     Download
                   </a>
@@ -206,7 +200,6 @@ function ChatArea() {
       <MessageOthers props={message} />
     );
   };
-
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -247,7 +240,6 @@ function ChatArea() {
     formData.append("file", file);
     formData.append("upload_preset", process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET);
     formData.append("cloud_name", process.env.REACT_APP_CLOUDINARY_CLOUD_NAME);
-    formData.append("resource_type", file.type.startsWith("audio") ? "video" : "auto");
 
     try {
       setUploading(true);
@@ -273,7 +265,6 @@ function ChatArea() {
       headers: {
         Authorization: `Bearer ${userData.data.token}`,
         "Content-Type": "application/json",
-        credentials: "include",
       },
     };
 
@@ -290,7 +281,6 @@ function ChatArea() {
             isFile: true,
             fileType: file.type,
             fileName: file.name,
-            isVoiceMessage: file.type.startsWith("audio"),
           };
         }
       }
@@ -301,11 +291,7 @@ function ChatArea() {
         config
       );
 
-      socketRef.current.emit('new message', {
-        ...data,
-        chatId: chat_id,
-        receiverId
-      });
+      socketRef.current.emit("new message", { ...data, chatId: chat_id });
 
       setFile(null);
       setFilePreview(null);
@@ -315,7 +301,7 @@ function ChatArea() {
 
       if (typing) {
         setTyping(false);
-        socketRef.current.emit('stop typing', { chatId: chat_id, userId: userData.data._id });
+        socketRef.current.emit("stop typing", { chatId: chat_id, userId: userData.data._id });
       }
     } catch (error) {
       console.error("Message send error:", error);
@@ -323,13 +309,17 @@ function ChatArea() {
   };
 
   useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [allMessages]);
+
+  useEffect(() => {
     const fetchRecipientName = async () => {
       const config = {
-        headers: {
-          Authorization: `Bearer ${userData.data.token}`,
-          credentials: "include",
-        },
+        headers: { Authorization: `Bearer ${userData.data.token}` },
       };
+
       try {
         const { data } = await axios.get(
           `https://connect-server-1a2y.onrender.com/message/recipient/${chat_id}`,
@@ -355,10 +345,7 @@ function ChatArea() {
 
   useEffect(() => {
     const config = {
-      headers: {
-        Authorization: `Bearer ${userData.data.token}`,
-        credentials: "include"
-      },
+      headers: { Authorization: `Bearer ${userData.data.token}` },
     };
 
     axios
@@ -374,12 +361,10 @@ function ChatArea() {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
-      
+
       if (selectedFile.type.startsWith("image/")) {
         const reader = new FileReader();
-        reader.onloadend = () => {
-          setFilePreview(reader.result);
-        };
+        reader.onloadend = () => setFilePreview(reader.result);
         reader.readAsDataURL(selectedFile);
       } else {
         setFilePreview(null);
@@ -403,35 +388,36 @@ function ChatArea() {
         <p className={"con-icon" + (lightTheme ? "" : " dark")}>{recipientName[0]}</p>
         <div className={"header-text" + (lightTheme ? "" : " dark")}>
           <p className={"con-title" + (lightTheme ? "" : " dark")}>{recipientName}</p>
-          <p className={"con-timestamp" + (lightTheme ? "" : " dark")}></p>
         </div>
-        <CallIcon 
-          sx={{ color: "darkorchid" }} 
-          className={"icon" + (lightTheme ? "" : " dark")} 
-          onClick={() => startCall('audio')}
-        />
-        <VideocamIcon 
-          sx={{ color: "darkorchid" }} 
+        <CallIcon
+          sx={{ color: "darkorchid" }}
           className={"icon" + (lightTheme ? "" : " dark")}
-          onClick={() => startCall('video')}
+          onClick={() => startCall("audio")}
+        />
+        <VideocamIcon
+          sx={{ color: "darkorchid" }}
+          className={"icon" + (lightTheme ? "" : " dark")}
+          onClick={() => startCall("video")}
         />
         <IconButton>
           <DeleteIcon sx={{ color: "darkorchid" }} className={"icon" + (lightTheme ? "" : " dark")} />
         </IconButton>
       </div>
 
-      <div className={"messages-container" + (lightTheme ? "" : " dark")}
-        style={{ flexGrow: 1, overflowY: "auto", padding: "10px" }}>
+      <div
+        className={"messages-container" + (lightTheme ? "" : " dark")}
+        style={{ flexGrow: 1, overflowY: "auto", padding: "10px" }}
+      >
         {isRecipientTyping && (
           <div className="typing-indicator" style={{ padding: "5px 10px", color: "#666" }}>
             {recipientName} is typing...
           </div>
         )}
-        {allMessages.slice(0).reverse().map((message, index) => (
-          <div key={index}>
-            {renderMediaContent(message)}
-          </div>
-        ))}
+         <div ref={chatContainerRef} style={{ overflowY: "auto", scrollbarWidth: "thin",scrollbarColor: "transparent transparent", height: "100%" }}>
+      {allMessages.map((message, index) => (
+        <div key={index}>{renderMediaContent(message)}</div>
+      ))}
+    </div>
         <div ref={messagesEndRef} />
       </div>
 
