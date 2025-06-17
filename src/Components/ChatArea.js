@@ -78,6 +78,23 @@ function ChatArea() {
     callInterfaceRef.current = callInterface;
   }, [callInterface]);
 
+  // FIXED: Enhanced error handling function
+  const handleApiError = (error) => {
+    console.error('❌ API Error:', error);
+    
+    if (error.response) {
+      // Server responded with error status
+      const message = error.response.data?.message || "Server error occurred";
+      return message;
+    } else if (error.request) {
+      // Request was made but no response received
+      return "Network error. Please check your connection.";
+    } else {
+      // Something else happened
+      return error.message || "An unexpected error occurred";
+    }
+  };
+
   // Socket.IO connection for real-time messaging
   useEffect(() => {
     console.log('🔌 Setting up socket connection...');
@@ -85,11 +102,15 @@ function ChatArea() {
     
     socketRef.current = io("https://connect-server-1a2y.onrender.com", {
       auth: { token: userData.data.token },
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      timeout: 20000,
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: 5
     });
 
     socketRef.current.on('connect', () => {
-      console.log('🔌 Socket connected:', socketRef.current.id);
+      console.log('🔌 Socket connected successfully:', socketRef.current.id);
       console.log('🔌 Current user ID:', userData.data._id || userData.data.id);
       socketRef.current.emit("setup", userData.data);
       socketRef.current.emit("join chat", chat_id);
@@ -102,9 +123,15 @@ function ChatArea() {
       console.error('🔌 Socket connection error:', error);
     });
 
-    socketRef.current.on('disconnect', () => {
-      console.log('🔌 Socket disconnected');
+    socketRef.current.on('disconnect', (reason) => {
+      console.log('🔌 Socket disconnected:', reason);
       callListenersSetup.current = false;
+    });
+
+    socketRef.current.on('reconnect', (attemptNumber) => {
+      console.log('🔌 Socket reconnected after', attemptNumber, 'attempts');
+      socketRef.current.emit("setup", userData.data);
+      socketRef.current.emit("join chat", chat_id);
     });
 
     setupBasicListeners();
@@ -122,6 +149,8 @@ function ChatArea() {
 
   const setupBasicListeners = () => {
     if (!socketRef.current) return;
+
+    console.log('🔧 Setting up basic socket listeners');
 
     socketRef.current.on("message received", (newMessage) => {
       console.log('💬 Message received:', newMessage);
@@ -151,87 +180,111 @@ function ChatArea() {
       }
     });
 
-    // Handle user leaving group - REAL TIME UPDATE
+    // FIXED: Enhanced group management socket listeners with better state updates
     socketRef.current.on("user left group", (data) => {
-      console.log('👋 User left group:', data);
+      console.log('👋 User left group event received:', data);
       const { chatId, userId, userName, updatedChat } = data;
       
       if (chatId === chat_id) {
+        console.log(`👋 Processing user left: ${userName} (${userId})`);
+        
+        // Update local state with new chat data
         if (isGroupChat && updatedChat) {
           setGroupMembers(updatedChat.users || []);
           setCurrentChat(updatedChat);
+          
+          // Update admin status if needed
+          if (updatedChat.groupAdmin) {
+            setIsCurrentUserAdmin(updatedChat.groupAdmin._id === userData.data._id);
+          }
         }
         
         // If current user left the group, redirect
         if (userId === userData.data._id) {
-          console.log('Current user left group, redirecting...');
-          alert("You have left the group");
-          navigate("/app/welcome");
-        } else {
-          // Show notification that someone else left
-          console.log(`${userName} left the group`);
+          console.log('👋 Current user left group, redirecting...');
+          setTimeout(() => {
+            navigate("/app/welcome");
+          }, 1000);
         }
+        
+        // Close any open dropdowns
+        setShowMemberActions(null);
+        setShowDropdown(false);
       }
     });
 
-    // Handle admin functions - REAL TIME UPDATES
     socketRef.current.on("user removed from group", (data) => {
-      console.log('🚫 User removed from group:', data);
+      console.log('🚫 User removed from group event received:', data);
       const { chatId, removedUserId, removedUserName, adminName, updatedChat } = data;
       
       if (chatId === chat_id) {
+        console.log(`🚫 Processing user removal: ${removedUserName} by ${adminName}`);
+        
+        // Update local state
         if (updatedChat) {
           setGroupMembers(updatedChat.users || []);
           setCurrentChat(updatedChat);
+          
+          // Update admin status
+          if (updatedChat.groupAdmin) {
+            setIsCurrentUserAdmin(updatedChat.groupAdmin._id === userData.data._id);
+          }
         }
         
         // If current user was removed, redirect
         if (removedUserId === userData.data._id) {
-          alert(`You have been removed from the group by ${adminName}`);
-          navigate("/app/welcome");
-        } else {
-          console.log(`${removedUserName} was removed by ${adminName}`);
+          console.log('🚫 Current user was removed, redirecting...');
+          setTimeout(() => {
+            navigate("/app/welcome");
+          }, 1000);
         }
         
-        // Close any open dropdowns
+        // Close dropdowns
         setShowMemberActions(null);
         setShowDropdown(false);
       }
     });
 
     socketRef.current.on("user added to group", (data) => {
-      console.log('➕ User added to group:', data);
+      console.log('➕ User added to group event received:', data);
       const { chatId, addedUserName, updatedChat } = data;
       
       if (chatId === chat_id && updatedChat) {
+        console.log(`➕ Processing user addition: ${addedUserName}`);
+        
         setGroupMembers(updatedChat.users || []);
         setCurrentChat(updatedChat);
-        console.log(`${addedUserName} was added to the group`);
+        
+        // Update admin status
+        if (updatedChat.groupAdmin) {
+          setIsCurrentUserAdmin(updatedChat.groupAdmin._id === userData.data._id);
+        }
       }
     });
 
     socketRef.current.on("admin changed", (data) => {
-      console.log('👑 Admin changed:', data);
+      console.log('👑 Admin changed event received:', data);
       const { chatId, newAdminId, newAdminName, updatedChat } = data;
       
       if (chatId === chat_id && updatedChat) {
+        console.log(`👑 Processing admin change: ${newAdminName} is now admin`);
+        
         setCurrentChat(updatedChat);
         setIsCurrentUserAdmin(updatedChat.groupAdmin._id === userData.data._id);
         setGroupMembers(updatedChat.users || []);
         
         // Show notification about admin change
         if (newAdminId === userData.data._id) {
-          console.log("You are now the group admin!");
-        } else {
-          console.log(`${newAdminName} is now the group admin`);
+          console.log("🎉 You are now the group admin!");
         }
         
-        // Close any open dropdowns
+        // Close dropdowns
         setShowMemberActions(null);
         setShowDropdown(false);
       }
     });
 
+    // Online/offline status
     socketRef.current.on("online users", (users) => {
       console.log('👥 Online users received:', users);
       setOnlineUsers(Array.isArray(users) ? users : []);
@@ -410,7 +463,7 @@ function ChatArea() {
     };
   }, []);
 
-  // FIXED: Admin function: Remove user from group
+  // FIXED: Admin function: Remove user from group with proper error handling
   const handleRemoveUser = async (userIdToRemove, userName) => {
     try {
       const confirmRemove = window.confirm(`Are you sure you want to remove ${userName} from the group?`);
@@ -437,21 +490,21 @@ function ChatArea() {
 
       console.log('✅ Remove user response:', response.data);
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
+        alert(response.data.message || `${userName} has been removed from the group`);
         setShowMemberActions(null);
-        // Don't manually refresh - socket will handle real-time updates
-        console.log(`${userName} has been removed from the group`);
+        // Socket will handle real-time updates
       } else {
-        alert(response.data.message || "Failed to remove user");
+        alert(response.data?.message || "Failed to remove user");
       }
     } catch (error) {
       console.error("❌ Error removing user:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to remove user";
+      const errorMessage = handleApiError(error);
       alert(errorMessage);
     }
   };
 
-  // FIXED: Admin function: Transfer admin rights
+  // FIXED: Admin function: Transfer admin rights with proper error handling
   const handleTransferAdmin = async (newAdminId, newAdminName) => {
     try {
       const confirmTransfer = window.confirm(`Are you sure you want to make ${newAdminName} the group admin? You will lose admin privileges.`);
@@ -478,30 +531,23 @@ function ChatArea() {
 
       console.log('✅ Transfer admin response:', response.data);
 
-      if (response.data.success) {
+      if (response.data && response.data.success) {
+        alert(response.data.message || `${newAdminName} is now the group admin`);
         setShowMemberActions(null);
-        // Don't manually refresh - socket will handle real-time updates
-        console.log(`${newAdminName} is now the group admin`);
+        // Socket will handle real-time updates
       } else {
-        alert(response.data.message || "Failed to transfer admin rights");
+        alert(response.data?.message || "Failed to transfer admin rights");
       }
     } catch (error) {
       console.error("❌ Error transferring admin:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to transfer admin rights";
+      const errorMessage = handleApiError(error);
       alert(errorMessage);
     }
   };
 
-  // FIXED: Leave group function
+  // FIXED: Leave group function with proper error handling
   const handleLeaveGroup = async () => {
     try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${userData.data.token}`,
-          "Content-Type": "application/json",
-        },
-      };
-
       const confirmLeave = window.confirm(
         `Are you sure you want to leave "${recipientName}"? You won't be able to see new messages from this group.`
       );
@@ -510,6 +556,13 @@ function ChatArea() {
         setShowDropdown(false);
         return;
       }
+
+      const config = {
+        headers: {
+          Authorization: `Bearer ${userData.data.token}`,
+          "Content-Type": "application/json",
+        },
+      };
 
       console.log('🔄 Leaving group:', chat_id);
 
@@ -527,29 +580,20 @@ function ChatArea() {
       if (response.data && response.data.success) {
         setShowDropdown(false);
         setRefresh(!refresh);
-        // The socket event will handle the redirection
-        console.log("Successfully left the group");
+        alert(response.data.message || "You have left the group successfully");
+        // Socket will handle navigation
       } else {
-        alert(response.data.message || "Failed to leave group");
+        alert(response.data?.message || "Failed to leave group");
+        setShowDropdown(false);
       }
     } catch (error) {
       console.error("❌ Error leaving group:", error);
-      
-      const errorMessage = error.response?.data?.message || error.message;
-      
-      if (error.response?.status === 404) {
-        alert("Group not found. It may have been deleted.");
-      } else if (error.response?.status === 403) {
-        alert("You don't have permission to leave this group.");
-      } else {
-        alert(errorMessage || "Failed to leave group. Please try again.");
-      }
-      
+      const errorMessage = handleApiError(error);
+      alert(errorMessage);
       setShowDropdown(false);
     }
   };
 
-  // Rest of your existing functions remain the same...
   useEffect(() => {
     console.log('👥 Checking online status...');
     console.log('👥 Online users:', onlineUsers);
