@@ -33,7 +33,7 @@ function Users() {
         credentials: "include",
       },
     };
-    axios.get("http://localhost:5000/user/fetchUsers", config).then((data) => {
+    axios.get("https://connect-server-1a2y.onrender.com/user/fetchUsers", config).then((data) => {
       console.log("UData refreshed in Users panel ");
       setUsers(data.data);
     });
@@ -50,7 +50,7 @@ function Users() {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/chat/",
+        "https://connect-server-1a2y.onrender.com/chat/",
         {
           userId: user._id,
         },

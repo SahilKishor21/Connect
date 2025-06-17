@@ -239,7 +239,7 @@ function ChatArea() {
     console.log("🔌 Setting up socket connection...");
     console.log("🔌 User data:", userData.data);
 
-    socketRef.current = io("http://localhost:5000", {
+    socketRef.current = io("https://connect-server-1a2y.onrender.com", {
       auth: { token: userData.data.token },
       transports: ["websocket", "polling"],
     });
@@ -451,7 +451,7 @@ function ChatArea() {
 
         console.log("👤 Fetching chat details for chat_id:", chat_id);
         const { data } = await axios.get(
-          `http://localhost:5000/chat/${chat_id}`,
+          `https://connect-server-1a2y.onrender.com/chat/${chat_id}`,
           config
         );
         console.log("👤 Chat data received:", data);
@@ -549,7 +549,7 @@ function ChatArea() {
 
       // Call the updated leave group API
       const response = await axios.post(
-        "http://localhost:5000/chat/groupExit",
+        "https://connect-server-1a2y.onrender.com/chat/groupExit",
         {
           chatId: chat_id,
           userId: userData.data._id,
@@ -754,7 +754,7 @@ function ChatArea() {
       try {
         console.log("👤 Fetching recipient name for chat:", chat_id);
         const { data } = await axios.get(
-          `http://localhost:5000/message/recipient/${chat_id}`,
+          `https://connect-server-1a2y.onrender.com/message/recipient/${chat_id}`,
           config
         );
         console.log("👤 Recipient name fetched:", data.recipientName);
@@ -997,7 +997,7 @@ function ChatArea() {
       }
 
       const { data } = await axios.post(
-        "http://localhost:5000/message/",
+        "https://connect-server-1a2y.onrender.com/message/",
         messageData,
         config
       );
@@ -1054,7 +1054,7 @@ function ChatArea() {
     };
 
     axios
-      .get(`http://localhost:5000/message/${chat_id}`, config)
+      .get(`https://connect-server-1a2y.onrender.com/message/${chat_id}`, config)
       .then(({ data }) => {
         setAllMessages(data);
         setLoaded(true);

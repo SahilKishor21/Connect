@@ -32,7 +32,7 @@ function Sidebar() {
   }
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000", {
+    socketRef.current = io("https://connect-server-1a2y.onrender.com", {
       auth: { token: user.token },
       transports: ['websocket', 'polling']
     });
@@ -77,7 +77,7 @@ function Sidebar() {
           },
         };
 
-        const response = await axios.get("http://localhost:5000/chat/", config);
+        const response = await axios.get("https://connect-server-1a2y.onrender.com/chat/", config);
         console.log('📋 Fetched conversations:', response.data);
         const sortedConversations = response.data.sort((a, b) => {
           const aTime = a.latestMessage?.createdAt || a.createdAt;

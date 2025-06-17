@@ -45,7 +45,7 @@ class CallService {
     console.log('CallService: Initializing socket connection...');
     
     this.connectionPromise = new Promise((resolve, reject) => {
-      this.socket = io("http://localhost:5000", {
+      this.socket = io("https://connect-server-1a2y.onrender.com", {
         auth: { token },
         transports: ['websocket', 'polling'],
         timeout: 10000

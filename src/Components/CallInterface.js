@@ -62,7 +62,7 @@ const CallInterface = ({
 
         // Initialize socket connection
         setConnectionInfo('Connecting...');
-        const socketInstance = io("http://localhost:5000", {
+        const socketInstance = io("https://connect-server-1a2y.onrender.com", {
           auth: { token: userData.data.token },
           transports: ['websocket', 'polling'],
           forceNew: false // Use existing connection if available
