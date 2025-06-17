@@ -36,7 +36,7 @@ function Groups() {
     };
 
     axios
-      .get("https://connect-server-1a2y.onrender.com/chat/fetchGroups", config)
+      .get("http://localhost:5000/chat/fetchGroups", config)
       .then((response) => {
         console.log("Group Data from API ", response.data);
         SetGroups(response.data);
@@ -53,7 +53,7 @@ function Groups() {
       };
 
       const response = await axios.post(
-        "https://connect-server-1a2y.onrender.com/chat/",
+        "http://localhost:5000/chat/",
         {
           isGroup: true,
           chatId: group._id,

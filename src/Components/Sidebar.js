@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState, useRef } from "react";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { IconButton } from "@mui/material";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -13,6 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toggleTheme } from "../Features/themeSlice";
 import axios from "axios";
 import { myContext } from "./MainContainer";
+import io from "socket.io-client";
 
 function Sidebar() {
   const navigate = useNavigate();
@@ -24,50 +25,106 @@ function Sidebar() {
   const [searchTerm, setSearchTerm] = useState("");
   const userData = JSON.parse(localStorage.getItem("userData"));
   const user = userData?.data;
+  const socketRef = useRef(null);
 
-  // Redirect if not authenticated
   if (!userData) {
     navigate("/");
   }
 
   useEffect(() => {
-    const config = {
-      headers: {
-        Authorization: `Bearer ${user.token}`,
-        credentials: "include",
-      },
+    socketRef.current = io("http://localhost:5000", {
+      auth: { token: user.token },
+      transports: ['websocket', 'polling']
+    });
+
+    socketRef.current.on('connect', () => {
+      console.log('🔌 Sidebar socket connected');
+      socketRef.current.emit("setup", user);
+    });
+
+    socketRef.current.on("message received", (newMessage) => {
+      console.log('💬 Sidebar received message:', newMessage);
+      setRefresh(prev => !prev);
+    });
+
+    socketRef.current.on("notification received", (data) => {
+      console.log('🔔 Sidebar received notification:', data);
+      setRefresh(prev => !prev);
+    });
+
+    socketRef.current.on("user left group", (data) => {
+      console.log('👋 User left group in sidebar:', data);
+      if (data.userId === user._id) {
+        setRefresh(prev => !prev);
+      }
+    });
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.removeAllListeners();
+        socketRef.current.disconnect();
+      }
+    };
+  }, [user.token, user._id, setRefresh]);
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const config = {
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            credentials: "include",
+          },
+        };
+
+        const response = await axios.get("http://localhost:5000/chat/", config);
+        console.log('📋 Fetched conversations:', response.data);
+        const sortedConversations = response.data.sort((a, b) => {
+          const aTime = a.latestMessage?.createdAt || a.createdAt;
+          const bTime = b.latestMessage?.createdAt || b.createdAt;
+          return new Date(bTime) - new Date(aTime);
+        });
+        setConversations(sortedConversations);
+      } catch (error) {
+        console.error('❌ Error fetching conversations:', error);
+      }
     };
 
-    axios.get("https://connect-server-1a2y.onrender.com/chat/", config).then((response) => {
-      setConversations(response.data);
-    });
-  }, [refresh, user.token, setRefresh]);
+    fetchConversations();
+  }, [refresh, user.token]);
 
   const getReceiverName = (conversation) => {
+    console.log('🔍 Getting receiver name for:', conversation);
     if (conversation.isGroupChat) {
-      return conversation.chatName;
+      console.log('👥 Group chat name:', conversation.chatName);
+      return conversation.chatName || "Group Chat";
     }
-    
     const receiver = conversation.users.find(
       (participant) => participant._id !== user._id
     );
+    console.log('👤 One-on-one receiver:', receiver?.name);
     return receiver?.name || "Unknown User";
   };
 
+  const handleConversationClick = (conversation) => {
+    const displayName = getReceiverName(conversation);
+    console.log('🖱️ Clicking conversation:', conversation._id, displayName);
+    if (conversation.isGroupChat) {
+      navigate(`chat/${conversation._id}&${conversation.chatName || 'GroupChat'}`);
+    } else {
+      navigate(`chat/${conversation._id}&${displayName}`);
+    }
+  };
 
   const filteredConversations = conversations.filter(conversation => {
     const name = getReceiverName(conversation).toLowerCase();
     const searchLower = searchTerm.toLowerCase();
-    
-    // Also search in latest message if it exists
     const latestMessage = conversation.latestMessage?.content?.toLowerCase() || "";
-    
     return name.includes(searchLower) || latestMessage.includes(searchLower);
   });
 
   return (
     <div className="sidebar-container">
-      {/* Sidebar Header */}
       <div className={"sb-header" + (lightTheme ? "" : " dark")}>
         <div className="other-icons">
           <IconButton
@@ -144,7 +201,6 @@ function Sidebar() {
         </div>
       </div>
 
-      {/* Search Bar */}
       <div className={"sb-search" + (lightTheme ? "" : " dark")}>
         <IconButton className={"icon" + (lightTheme ? "" : " dark")}>
           <SearchIcon />
@@ -157,7 +213,6 @@ function Sidebar() {
         />
       </div>
 
-      {/* Conversations */}
       <div className={"sb-conversations" + (lightTheme ? "" : " dark")}>
         {filteredConversations.map((conversation, index) => {
           if (conversation.users.length === 1) {
@@ -171,9 +226,7 @@ function Sidebar() {
               <div
                 key={index}
                 className="conversation-container"
-                onClick={() => {
-                  navigate("chat/" + conversation._id + "&" + displayName);
-                }}
+                onClick={() => handleConversationClick(conversation)}
               >
                 <p className={"con-icon" + (lightTheme ? "" : " dark")}>
                   {displayName[0]}
@@ -193,9 +246,7 @@ function Sidebar() {
               <div
                 key={index}
                 className="conversation-container"
-                onClick={() => {
-                  navigate("chat/" + conversation._id + "&" + displayName);
-                }}
+                onClick={() => handleConversationClick(conversation)}
               >
                 <p className={"con-icon" + (lightTheme ? "" : " dark")}>
                   {displayName[0]}

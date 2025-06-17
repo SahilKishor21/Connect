@@ -10,8 +10,8 @@
 
 .main-container {
   background-color: #f4f5f8;
-  height: 90vh;
-  width: 90vw;
+  height: 100vh;
+  width: 100vw;
   display: flex;
   border-radius: 20px;
   position: relative; 
@@ -327,8 +327,8 @@ input:focus {
 }
 
 .login-container {
-  height: 90vh;
-  width: 90vw;
+  height: 95vh;
+  width: 95vw;
   background-color: #f4f5f8;
   border-radius: 20px;
   display: flex;
@@ -566,4 +566,36 @@ input:focus {
   display: flex;
   gap: 8px;
   margin-left: 4px;
+}
+
+/* Simple Group Dropdown Styles matching project design */
+@keyframes dropdownSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.group-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.group-dropdown::-webkit-scrollbar-thumb {
+  background: darkorchid;
+  border-radius: 3px;
+}
+
+.group-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Dark theme for dropdown */
+.dark .group-dropdown {
+  background-color: #2a2d47;
+  border-color: #444;
+  color: lightgray;
 }
