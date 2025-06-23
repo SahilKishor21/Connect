@@ -36,7 +36,7 @@ function Groups() {
     };
 
     axios
-      .get("https://connect-server-1a2y.onrender.com/chat/fetchGroups", config)
+      .get("https://connect-server-1a2y.onrender.com/chat/fetch", config)
       .then((response) => {
         console.log("Group Data from API ", response.data);
         SetGroups(response.data);

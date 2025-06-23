@@ -1025,7 +1025,7 @@ function ChatArea() {
                 width: '280px',
                 backgroundColor: lightTheme ? 'white' : '#2a2d47',
                 border: `1px solid ${lightTheme ? '#ddd' : '#444'}`,
-                borderRadius: '15px',
+                borderRadius: '0px',
                 boxShadow: 'rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px',
                 zIndex: 1000,
                 maxHeight: '350px',
